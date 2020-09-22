@@ -1,0 +1,7 @@
+DROP SCHEMA staging_medcubeskpj_selangor CASCADE;
+CREATE SCHEMA staging_medcubeskpj_selangor;
+
+
+psql "dbname=kpj options=--search_path=staging_medcubeskpj_selangor" -a -f /home/gpadmin/MedCubesKPJ_Tables_with_DISTRIBUTED_BY.sql
+
+psql "dbname=kpj options=--search_path=staging_medcubeskpj_selangor" -a -f /home/gpadmin/PXF_external_tables_ALL_AT_ONCE

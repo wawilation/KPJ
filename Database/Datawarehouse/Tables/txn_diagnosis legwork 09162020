@@ -1,0 +1,67 @@
+txn_diagnosis
+
+CREATE SEQUENCE txn_diagnosis_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER TABLE datawarehouse.txn_diagnosis ALTER COLUMN id SET DEFAULT nextval('txn_diagnosis_seq'::regclass);
+
+
+--get pin by joining to datawarehouse.patient via dw_patient_id
+
+INSERT INTO txn_diagnosis
+SELECT NEXTVAL('txn_diagnosis_seq') - 1, V.*
+FROM
+(SELECT
+	CURRENT_DATE,
+	pdiag.diagnosisdatetime,
+	CURRENT_DATE,
+	pdiag.diagnosisdatetime,
+	0,
+	0,
+	NULL,
+	0,
+	1,
+	'DDIAGSTAT2',
+	pdiag.text,
+	0,
+	pdiag.isfinal,
+	dw_pat.pin
+FROM staging_medcubeskpj.patientdiagnosis pdiag JOIN staging_medcubeskpj.patient stg_pat
+	ON pdiag.patientid = stg_pat.patientid
+JOIN datawarehouse.patient dw_pat
+	ON dw_pat.id = stg_pat.dw_patient_id
+
+UNION
+
+SELECT
+	CURRENT_DATE,
+	pdiag.diagnosisdatetime,
+	CURRENT_DATE,
+	pdiag.diagnosisdatetime,
+	0,
+	0,
+	NULL,
+	0,
+	1,
+	'DDIAGSTAT2',
+	pdiag.text,
+	0,
+	pdiag.isfinal,
+	dw_pat.pin
+FROM staging_medcubeskpj_selangor.patientdiagnosis pdiag JOIN staging_medcubeskpj_selangor.patient stg_pat
+	ON pdiag.patientid = stg_pat.patientid
+JOIN datawarehouse.patient dw_pat
+	ON dw_pat.id = stg_pat.dw_patient_id) V;
+
+
+
+truncate table txn_diagnosis;
+select setval('txn_diagnosis_seq',1);
+
+
+
+

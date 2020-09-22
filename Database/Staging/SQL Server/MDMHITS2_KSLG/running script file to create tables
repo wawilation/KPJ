@@ -1,0 +1,8 @@
+DROP SCHEMA staging_mdmhits2_kslg CASCADE;
+CREATE SCHEMA staging_mdmhits2_kslg;
+
+psql "dbname=kpj options=--search_path=staging_mdmhits2_kslg" -a -f /home/gpadmin/MDMHITS2_KSLG_tables_with_DISTRIBUTED_BY
+
+
+
+psql "dbname=kpj options=--search_path=staging_mdmhits2_kslg" -a -f /home/gpadmin/PXF_external_tables_ALL_AT_ONCE

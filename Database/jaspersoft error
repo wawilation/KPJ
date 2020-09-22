@@ -1,0 +1,39 @@
+Starting job hisdb_job at 14:07 11/09/2020.
+
+[statistics] connecting to socket on port 3851
+[statistics] connected
+Exception in component tJDBCInput_1
+java.sql.SQLException: [DataDirect][ODBC Progress OpenEdge Wire Protocol driver][OPENEDGE]Access denied (Authorisation failed) (7512)
+	at cdata.jdbc.jdbcodbc.OdbcSql.checkSQLError(Unknown Source)
+	at cdata.jdbc.jdbcodbc.OdbcSql.checkSQLError(Unknown Source)
+	at XcoreXjdbcodbcX200X7503.kgf.checkError(Unknown Source)
+	at XcoreXjdbcodbcX200X7503.kgf.c(Unknown Source)
+	at XcoreXjdbcodbcX200X7503.kgf.execute(Unknown Source)
+	at XcoreXjdbcodbcX200X7503.kgf.executeQuery(Unknown Source)
+	at hisdb.hisdb_job_0_1.hisdb_job.tJDBCInput_1Process(hisdb_job.java:898)
+	at hisdb.hisdb_job_0_1.hisdb_job.runJobInTOS(hisdb_job.java:1565)
+	at hisdb.hisdb_job_0_1.hisdb_job.main(hisdb_job.java:1422)
+[statistics] disconnected
+Job hisdb_job ended at 14:07 11/09/2020. [exit code=1]
+
+
+
+
+
+Starting job hisdb_job at 20:16 11/09/2020.
+
+[statistics] connecting to socket on port 3519
+[statistics] connected
+Exception in component tJDBCInput_1
+java.sql.SQLException: [DataDirect][ODBC Progress OpenEdge Wire Protocol driver][OPENEDGE]Access denied (Authorisation failed) (7512)
+	at cdata.jdbc.jdbcodbc.OdbcSql.checkSQLError(Unknown Source)
+	at cdata.jdbc.jdbcodbc.OdbcSql.checkSQLError(Unknown Source)
+	at XcoreXjdbcodbcX200X7503.kgf.checkError(Unknown Source)
+	at XcoreXjdbcodbcX200X7503.kgf.c(Unknown Source)
+	at XcoreXjdbcodbcX200X7503.kgf.execute(Unknown Source)
+	at XcoreXjdbcodbcX200X7503.kgf.executeQuery(Unknown Source)
+	at hisdb.hisdb_job_0_1.hisdb_job.tJDBCInput_1Process(hisdb_job.java:898)
+	at hisdb.hisdb_job_0_1.hisdb_job.runJobInTOS(hisdb_job.java:1565)
+	at hisdb.hisdb_job_0_1.hisdb_job.main(hisdb_job.java:1422)
+[statistics] disconnected
+Job hisdb_job ended at 20:16 11/09/2020. [exit code=1]

@@ -1,0 +1,83 @@
+                               Table "datawarehouse.patient_address"
+        Column         |          Type          | Modifiers | Storage  | Stats target | Description
+-----------------------+------------------------+-----------+----------+--------------+-------------
+ patient_id            | bigint                 | not null  | plain    |              |
+ city                  | character varying(255) |           | extended |              |
+ postal_code           | character varying(255) |           | extended |              |
+ street                | character varying(255) |           | extended |              |
+ address_type          | character varying(255) |           | extended |              |
+ city_id               | bigint                 |           | plain    |              |
+ complete_address_desc | character varying(255) |           | extended |              |
+ type                  | integer                |           | plain    |              |
+ country_id            | bigint                 |           | plain    |              |
+ province_id           | bigint                 |           | plain    |              |
+Indexes:
+    "patient_address_patient_id_idx" btree (patient_id)
+Foreign-key constraints:
+    "FK_71mdtlf9nc80gqm530mwhxetg" FOREIGN KEY (patient_id) REFERENCES patient(id)
+Distributed by: (patient_id)
+
+
+patient_id, city, postal_code, street, address_type, city_id, complete_address_desc, type, country_id, province_id
+
+
+
+CREATE SEQUENCE patient_address_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER TABLE datawarehouse.patient_address ALTER COLUMN id SET DEFAULT nextval('patient_address_seq'::regclass);
+
+
+SELECT dw.id, count(1) FROM
+datawarehouse.patient dw JOIN
+(SELECT dw_patient_id, id FROM staging_mdmhits2_klgsh.patients UNION SELECT dw_patient_id, id FROM staging_mdmhits2_kslg.patients) stg
+ON dw.id = stg.dw_patient_id -- AND dw.updated_date = stg.updatedate
+GROUP BY dw.id HAVING COUNT(1) > 1;
+
+
+
+SELECT patient_address paddress
+(SELECT 
+		DISTINCT X.id, X.dw_patient_id
+		FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) X
+		JOIN (SELECT name, dateofbirth, gender, MAX(updatedate) AS lastupdate, MAX(mrnnumber) AS lastmrnnumber, MAX(id) AS lastid
+		FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) A 
+		GROUP BY name, dateofbirth, gender) B
+		ON X.name = B.name AND
+		X.dateofbirth = B.dateofbirth AND
+		X.gender = B.gender AND
+		X.updatedate = B.lastupdate AND
+		X.mrnnumber = B.lastmrnnumber AND
+		X.id = B.lastid) V;
+
+SELECT ptaddress.* FROM
+(SELECT patientid, street1, city, addresstypeid FROM staging_mdmhits2_klgsh.patientaddress UNION SELECT patientid, street1, city, addresstypeid FROM staging_mdmhits2_kslg.patientaddress) ptaddress JOIN
+(SELECT dw_patient_id, id FROM staging_mdmhits2_klgsh.patients UNION SELECT dw_patient_id, id FROM staging_mdmhits2_kslg.patients) pt
+	ON ptaddress.patientid = pt.id LIMIT 10;
+
+
+select count(1) from staging_mdmhits2_klgsh.patients x join staging_mdmhits2_klgsh.patientaddress y on x.id = y.patientid;
+
+select count(1) from staging_mdmhits2_kslg.patients x join staging_mdmhits2_kslg.patientaddress y on x.id = y.patientid;
+
+kpj=# select count(1) from staging_mdmhits2_klgsh.patients x join staging_mdmhits2_klgsh.patientaddress y on x.id = y.patientid;
+ count
+-------
+     0
+(1 row)
+
+kpj=#
+kpj=# select count(1) from staging_mdmhits2_kslg.patients x join staging_mdmhits2_kslg.patientaddress y on x.id = y.patientid;
+ count
+-------
+     0
+(1 row)
+
+
+
+
+

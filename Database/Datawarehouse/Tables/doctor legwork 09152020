@@ -1,0 +1,105 @@
+doctor 1
+SELECT * FROM (SELECT a.dw_encounter_id AS visit_id,b.dw_doctor_id AS doctor_id,'ATTENDING' AS doctor_type,true AS primary_flag,false AS phic_eligible FROM staging_mdmhits2_klgsh.episodes a JOIN staging_mdmhits2_klgsh.doctors b ON a.admittingdoctorid=b.id WHERE dw_encounter_id IS NOT NULL
+UNION
+SELECT a.dw_encounter_id AS visit_id,b.dw_doctor_id AS doctor_id,'ATTENDING' AS doctor_type,true AS primary_flag,false AS phic_eligible FROM staging_mdmhits2_kslg.episodes a JOIN staging_mdmhits2_kslg.doctors b ON a.admittingdoctorid=b.id WHERE dw_encounter_id IS NOT NULL) a limit 10
+
+doctor 2
+SELECT * FROM (SELECT a.dw_encounter_id AS visit_id,b.dw_doctor_id AS doctor_id,'ATTENDING' AS doctor_type,false AS primary_flag,false AS phic_eligible FROM staging_mdmhits2_klgsh.episodes a JOIN staging_mdmhits2_klgsh.doctors b ON a.attendingdoctorid=b.id WHERE dw_encounter_id IS NOT NULL
+UNION
+SELECT a.dw_encounter_id AS visit_id,b.dw_doctor_id AS doctor_id,'ATTENDING' AS doctor_type,false AS primary_flag,false AS phic_eligible FROM staging_mdmhits2_kslg.episodes a JOIN staging_mdmhits2_kslg.doctors b ON a.attendingdoctorid=b.id WHERE dw_encounter_id IS NOT NULL) a limit 10
+
+doctor 3
+SELECT * FROM (SELECT a.dw_encounter_id AS visit_id,b.dw_doctor_id AS doctor_id,'ATTENDING' AS doctor_type,false AS primary_flag,false AS phic_eligible FROM staging_mdmhits2_klgsh.episodes a JOIN staging_mdmhits2_klgsh.doctors b ON a.referringdoctorid=b.id WHERE dw_encounter_id IS NOT NULL
+UNION
+SELECT a.dw_encounter_id AS visit_id,b.dw_doctor_id AS doctor_id,'ATTENDING' AS doctor_type,false AS primary_flag,false AS phic_eligible FROM staging_mdmhits2_kslg.episodes a JOIN staging_mdmhits2_kslg.doctors b ON a.referringdoctorid=b.id WHERE dw_encounter_id IS NOT NULL) a limit 10
+
+visit_id
+doctor_type
+primary_flag
+doctor_id
+phic_eligible
+phic_eligible_as_of
+
+
+DOCTOR 1:
+INSERT INTO datawarehouse.encounter_doctor (visit_id, doctor_type, primary_flag, doctor_id, phic_eligible, phic_eligible_as_of)
+SELECT * FROM 
+(SELECT 
+	a.dw_encounter_id AS visit_id,
+	b.dw_doctor_id AS doctor_id,
+	'ATTENDING' AS doctor_type,
+	CAST('t' AS boolean) AS primary_flag,
+	CAST('f' AS boolean) AS phic_eligible,
+	NULL 
+FROM staging_mdmhits2_klgsh.episodes a JOIN staging_mdmhits2_klgsh.doctors b 
+	ON a.admittingdoctorid=b.id 
+WHERE dw_encounter_id IS NOT NULL
+UNION
+SELECT 
+	a.dw_encounter_id AS visit_id,
+	b.dw_doctor_id AS doctor_id,
+	'ATTENDING' AS doctor_type,
+	CAST('t' AS boolean) AS primary_flag,
+	CAST('f' AS boolean) AS phic_eligible,
+	NULL 
+FROM staging_mdmhits2_kslg.episodes a JOIN staging_mdmhits2_kslg.doctors b 
+ON a.admittingdoctorid=b.id WHERE dw_encounter_id IS NOT NULL) a;
+
+DOCTOR 2:
+INSERT INTO datawarehouse.encounter_doctor (visit_id, doctor_type, primary_flag, doctor_id, phic_eligible, phic_eligible_as_of)
+SELECT * FROM 
+(SELECT 
+	a.dw_encounter_id AS visit_id,
+	b.dw_doctor_id AS doctor_id,
+	'ATTENDING' AS doctor_type,
+	CAST('f' AS boolean) AS primary_flag,
+	CAST('f' AS boolean) AS phic_eligible,
+	NULL 
+FROM staging_mdmhits2_klgsh.episodes a JOIN staging_mdmhits2_klgsh.doctors b 
+	ON a.attendingdoctorid=b.id 
+WHERE dw_encounter_id IS NOT NULL
+UNION
+SELECT 
+	a.dw_encounter_id AS visit_id,
+	b.dw_doctor_id AS doctor_id,
+	'ATTENDING' AS doctor_type,
+	CAST('f' AS boolean) AS primary_flag,
+	CAST('f' AS boolean) AS phic_eligible,
+	NULL 
+FROM staging_mdmhits2_kslg.episodes a JOIN staging_mdmhits2_kslg.doctors b 
+	ON a.attendingdoctorid=b.id 
+WHERE dw_encounter_id IS NOT NULL) a;
+
+DOCTOR 3:
+INSERT INTO datawarehouse.encounter_doctor (visit_id, doctor_type, primary_flag, doctor_id, phic_eligible, phic_eligible_as_of)
+SELECT * FROM 
+(SELECT 
+	a.dw_encounter_id AS visit_id,
+	b.dw_doctor_id AS doctor_id,
+	'ATTENDING' AS doctor_type,
+	false AS primary_flag,
+	false AS phic_eligible,
+	NULL 
+FROM staging_mdmhits2_klgsh.episodes a JOIN staging_mdmhits2_klgsh.doctors b 
+	ON a.referringdoctorid=b.id 
+WHERE dw_encounter_id IS NOT NULL
+UNION
+SELECT 
+	a.dw_encounter_id AS visit_id,
+	b.dw_doctor_id AS doctor_id,
+	'ATTENDING' AS doctor_type,
+	CAST('f' AS boolean) AS primary_flag,
+	CAST('f' AS boolean) AS phic_eligible,
+	NULL 
+FROM staging_mdmhits2_kslg.episodes a JOIN staging_mdmhits2_kslg.doctors b 
+	ON a.referringdoctorid=b.id 
+WHERE dw_encounter_id IS NOT NULL) a;
+
+
+
+
+
+
+
+
+

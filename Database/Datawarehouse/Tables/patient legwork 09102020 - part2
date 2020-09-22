@@ -1,0 +1,300 @@
+ select * from  staging_mdmhits2_klgsh.patients where name = 'MUHAMMAD HANAN BIN YUM';
+
+
+
+
+
+SELECT 
+		DISTINCT X.areaid, X.active, X.addresstypeid, X.admitic, X.admitperson, X.aeapproveuserid, X.age, X.bloodgroup, X.childno, X.citizenshipid, X.city, X.companyid, X.companyname, X.confidential, X.corpinfo, X.dateofbirth, X.email, X.financialstatus, firstname, X.firstvisit, X.gender, X.h_pphoneno, X.homephoneno, X.housingarea, X.idtypeid, X.languageid, X.lastname, X.lastvisit, X.maritalstatusid, X.medrecord, X.mrnnumber, X.mrntext, X.mrntype, X.name, X.newic, X.newmrn, noteexist, X.occupationid, X.officetelno, X.oldic, X.oldmrn, X.otherno, X.othernumber, X.personalemail, X.postalcodeid, X.raceid, X.registrationdate, X.relationshipid, X.religionid, X.staffid, X.stateid, X.status, X.street1, street2, X.street3, X.titleid, X.patienttype, X.updatedate, X.updateuserid, X.id, X.picturepath, X.recordstatus, X.description, X.convertedpatientid, X.ismedcare, X.ofcaddresstypeid, X.ofcstreet1, X.ofcstreet2, X.ofcstreet3, ofch_pphoneno, X.ofccity, X.blockno, X.ofcemail, X.ofcpostalcodeid, X.ofcareaid, X.ofcstateid
+		FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) X
+		JOIN (SELECT name, dateofbirth, gender, MAX(updatedate) AS lastupdate, MAX(mrnnumber) AS lastmrnnumber, MAX(id) AS lastid
+		FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) A 
+		GROUP BY name, dateofbirth, gender) Y
+		ON X.name = Y.name AND
+		X.dateofbirth = Y.dateofbirth AND
+		X.gender = Y.gender AND
+		X.updatedate = Y.lastupdate AND
+		X.mrnnumber = Y.lastmrnnumber AND
+		X.id = Y.lastid
+
+
+
+
+SELECT 
+	*
+		FROM 
+(SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) X
+		JOIN 
+(SELECT name, dateofbirth, gender, MAX(updatedate) AS lastupdate, MAX(mrnnumber) AS lastmrnnumber, MAX(id) AS lastid
+	FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) A 
+		GROUP BY name, dateofbirth, gender) Y
+	ON X.name = Y.name AND
+	X.dateofbirth = Y.dateofbirth AND
+	X.gender = Y.gender AND
+	X.updatedate = Y.lastupdate AND
+	X.mrnnumber = Y.lastmrnnumber AND
+	X.id = Y.lastid
+WHERE X.name = 'MUHAMMAD HANAN BIN YUM';
+--0
+
+SELECT 
+	*
+		FROM 
+(SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) X
+		JOIN 
+(SELECT name, dateofbirth, gender, MAX(updatedate) AS lastupdate, MAX(mrnnumber) AS lastmrnnumber, MAX(id) AS lastid
+	FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) A 
+		GROUP BY name, dateofbirth, gender) Y
+	ON X.name = Y.name AND
+	X.dateofbirth = Y.dateofbirth AND
+	X.gender = Y.gender AND
+	(X.updatedate = Y.lastupdate OR
+	X.mrnnumber = Y.lastmrnnumber OR
+	X.id = Y.lastid)
+WHERE X.name = 'MUHAMMAD HANAN BIN YUM';
+
+
+
+
+
+
+SELECT name, dateofbirth, gender, MAX(updatedate) AS lastupdate, MAX(mrnnumber) AS lastmrnnumber, MAX(id) AS lastid
+	FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) A 
+WHERE name = 'MUHAMMAD HANAN BIN YUM'
+GROUP BY name, dateofbirth, gender;
+-[ RECORD 1 ]-+------------------------
+name          | MUHAMMAD HANAN BIN YUM
+dateofbirth   | 1988-09-07 00:00:00
+gender        | MALE
+lastupdate    | 2019-04-11 10:22:32.663
+lastmrnnumber | 362853
+lastid        | 0000362853
+
+SELECT updatedate, mrnnumber, id FROM staging_mdmhits2_klgsh.patients WHERE name = 'MUHAMMAD HANAN BIN YUM';
+-[ RECORD 1 ]-----------------------
+updatedate | 2019-04-11 10:22:32.663
+mrnnumber  | 15
+id         | 0000000015
+
+SELECT updatedate, mrnnumber, id FROM staging_mdmhits2_kslg.patients WHERE name = 'MUHAMMAD HANAN BIN YUM';
+-[ RECORD 1 ]-----------------------
+updatedate | 2018-04-16 12:31:17.783
+mrnnumber  | 362853
+id         | 0000362853
+
+
+SELECT * FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) X WHERE name = 'MUHAMMAD HANAN BIN YUM';
+
+
+SELECT COUNT(*) FROM (SELECT name, gender, dateofbirth FROM staging_mdmhits2_klgsh.patients WHERE dw_patient_id IS NULL UNION SELECT name, gender, dateofbirth FROM staging_mdmhits2_kslg.patients WHERE dw_patient_id IS NULL) X;
+--12107
+
+
+
+
+SELECT COUNT(1) FROM 
+((SELECT name, gender, dateofbirth FROM staging_mdmhits2_klgsh.patients UNION SELECT name, gender, dateofbirth FROM staging_mdmhits2_kslg.patients)
+EXCEPT
+SELECT 
+	X.name, X.gender, X.dateofbirth
+		FROM 
+(SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) X
+		JOIN 
+(SELECT name, dateofbirth, gender, MAX(updatedate) AS lastupdate, MAX(mrnnumber) AS lastmrnnumber, MAX(id) AS lastid
+	FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) A 
+		GROUP BY name, dateofbirth, gender) Y
+	ON X.name = Y.name AND
+	X.dateofbirth = Y.dateofbirth AND
+	X.gender = Y.gender AND
+	X.updatedate = Y.lastupdate AND
+	X.mrnnumber = Y.lastmrnnumber AND
+	X.id = Y.lastid) V;
+--12107
+
+SELECT COUNT(*) FROM 
+((SELECT name, gender, dateofbirth FROM staging_mdmhits2_klgsh.patients UNION SELECT name, gender, dateofbirth FROM staging_mdmhits2_kslg.patients)
+EXCEPT
+(SELECT given_name, gender, birth_dt FROM datawarehouse.patient)) V;
+--12107
+
+
+CREATE TEMPORARY TABLE tmp_patients
+(	"areaid" varchar(36),
+	"active" boolean,
+	"addresstypeid" varchar(36),
+	"admitic" varchar(50),
+	"admitperson" varchar(50),
+	"aeapproveuserid" varchar(36),
+	"age" int,
+	"bloodgroup" varchar(36),
+	"childno" int,
+	"citizenshipid" varchar(36),
+	"city" varchar(50),
+	"companyid" varchar(36),
+	"companyname" varchar(50),
+	"confidential" boolean,
+	"corpinfo" varchar(50),
+	"dateofbirth" timestamp,
+	"email" varchar(60),
+	"financialstatus" varchar(50),
+	"firstname" varchar(200),
+	"firstvisit" timestamp,
+	"gender" varchar(50),
+	"h_pphoneno" varchar(50),
+	"homephoneno" varchar(50),
+	"housingarea" varchar(50),
+	"idtypeid" varchar(36),
+	"languageid" varchar(36),
+	"lastname" varchar(200),
+	"lastvisit" timestamp,
+	"maritalstatusid" varchar(36),
+	"medrecord" boolean,
+	"mrnnumber" int,
+	"mrntext" varchar(50),
+	"mrntype" varchar(50),
+	"name" varchar(200),
+	"newic" varchar(50),
+	"newmrn" int,
+	"noteexist" boolean,
+	"occupationid" varchar(36),
+	"officetelno" varchar(50),
+	"oldic" varchar(50),
+	"oldmrn" int,
+	"otherno" int,
+	"othernumber" varchar(50),
+	"personalemail" varchar(50),
+	"postalcodeid" varchar(36),
+	"raceid" varchar(36),
+	"registrationdate" timestamp,
+	"relationshipid" varchar(36),
+	"religionid" varchar(36),
+	"staffid" varchar(36),
+	"stateid" varchar(36),
+	"status" varchar(15),
+	"street1" varchar(50),
+	"street2" varchar(50),
+	"street3" varchar(50),
+	"titleid" varchar(36),
+	"patienttype" varchar(4),
+	"updatedate" timestamp,
+	"updateuserid" varchar(36),
+	"id" varchar(36),
+	"picturepath" varchar(250),
+	"recordstatus" varchar(5),
+	"description" varchar(250),
+	"convertedpatientid" varchar(36),
+	"ismedcare" boolean,
+	"ofcaddresstypeid" varchar(36),
+	"ofcstreet1" varchar(50),
+	"ofcstreet2" varchar(50),
+	"ofcstreet3" varchar(50),
+	"ofch_pphoneno" varchar(50),
+	"ofccity" varchar(50),
+	"blockno" varchar(50),
+	"ofcemail" varchar(50),
+	"ofcpostalcodeid" varchar(36),
+	"ofcareaid" varchar(36),
+	"ofcstateid" varchar(36),
+	dw_patient_id bigint) 
+DISTRIBUTED BY (name, dateofbirth, gender);
+
+INSERT INTO tmp_patients
+SELECT * FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) X
+WHERE (X.name, X.gender, X.dateofbirth) IN 
+((SELECT name, gender, dateofbirth FROM staging_mdmhits2_klgsh.patients UNION SELECT name, gender, dateofbirth FROM staging_mdmhits2_kslg.patients)
+EXCEPT
+(SELECT given_name, gender, birth_dt FROM datawarehouse.patient));
+
+
+SELECT 
+	*
+		FROM 
+(SELECT * FROM tmp_patients) X
+		JOIN 
+(SELECT name, dateofbirth, gender, MAX(updatedate) AS lastupdate
+	FROM (SELECT * FROM tmp_patients) A 
+		GROUP BY name, dateofbirth, gender) Y
+	ON X.name = Y.name AND
+	X.dateofbirth = Y.dateofbirth AND
+	X.gender = Y.gender AND
+	X.updatedate = Y.lastupdate
+WHERE X.name = 'MUHAMMAD HANAN BIN YUM';
+
+
+
+SELECT 
+	COUNT(1)
+		FROM 
+(SELECT * FROM tmp_patients) X
+		JOIN 
+(SELECT name, dateofbirth, gender, MAX(updatedate) AS lastupdate
+	FROM (SELECT * FROM tmp_patients) A 
+		GROUP BY name, dateofbirth, gender) Y
+	ON X.name = Y.name AND
+	X.dateofbirth = Y.dateofbirth AND
+	X.gender = Y.gender AND
+	X.updatedate = Y.lastupdate;
+
+
+SELECT given_name, gender, birth_dt, COUNT(1) FROM datawarehouse.patient GROUP BY given_name, gender, birth_dt HAVING COUNT(1) > 1;
+--0
+
+SELECT COUNT(1) FROM datawarehouse.patient;
+--660541
+
+
+
+SELECT COUNT(*) FROM (SELECT name, gender, dateofbirth FROM staging_mdmhits2_klgsh.patients WHERE dw_patient_id IS NULL UNION SELECT name, gender, dateofbirth FROM staging_mdmhits2_kslg.patients WHERE dw_patient_id IS NULL) X;
+--1688
+
+
+SELECT COUNT(*) FROM 
+((SELECT name, gender, dateofbirth FROM staging_mdmhits2_klgsh.patients UNION SELECT name, gender, dateofbirth FROM staging_mdmhits2_kslg.patients)
+EXCEPT
+(SELECT given_name, gender, birth_dt FROM datawarehouse.patient)) V;
+--1688
+
+SELECT * FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) X
+WHERE (X.name, X.gender, X.dateofbirth) IN 
+((SELECT name, gender, dateofbirth FROM staging_mdmhits2_klgsh.patients UNION SELECT name, gender, dateofbirth FROM staging_mdmhits2_kslg.patients)
+EXCEPT
+(SELECT given_name, gender, birth_dt FROM datawarehouse.patient));
+--0
+
+
+
+SELECT * FROM 
+((SELECT name, gender, dateofbirth FROM staging_mdmhits2_klgsh.patients UNION SELECT name, gender, dateofbirth FROM staging_mdmhits2_kslg.patients)
+EXCEPT
+(SELECT given_name, gender, birth_dt FROM datawarehouse.patient)) V WHERE dateofbirth IS NOT NULL AND gender IS NOT NULL AND name IS NOT NULL;
+
+
+
+UPDATE staging_mdmhits2_kslg.patients SET dw_patient_id = NULL;
+UPDATE staging_mdmhits2_klgsh.patients SET dw_patient_id = NULL;
+
+UPDATE staging_medcubeskpj.patient SET dw_patient_id = NULL;
+UPDATE staging_medcubeskpj_selangor.patient SET dw_patient_id = NULL;
+
+TRUNCATE TABLE patient cascade;
+TRUNCATE TABLE patient_identifier;
+select setval('patient_seq',1);
+VACUUM ANALYZE staging_mdmhits2_kslg.patients;
+VACUUM ANALYZE staging_mdmhits2_klgsh.patients;
+VACUUM ANALYZE datawarehouse.patient;
+VACUUM ANALYZE patient_identifier;
+select fn_kpj_patient();
+
+select count(1) from staging_medcubeskpj.patient where dw_patient_id is not null;
+select count(1) from staging_medcubeskpj_selangor.patient where dw_patient_id is not null;
+
+select count(1) from staging_medcubeskpj.patient;
+select count(1) from staging_medcubeskpj_selangor.patient;
+
+
+
+
+
+
+
+

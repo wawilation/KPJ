@@ -1,0 +1,100 @@
+patient id table:
+
+kelngn mo mag-insert ng records dun tpos mern syang multiple id_type
+first id type is ung national id, which is ung newic
+tpos kunwari ang source mo is klgsh, kelngn mo magadd ng new id type n KLGSH_MRN tpos ung idenfier = MRN text nya
+if existing dn sya sa kslg, kelngn mo dn iadd ung kslg n id type
+
+patient_id	identifier	id_type
+1	216100773	NATIONAL_ID
+1	00262963	KLGSH_MRN
+1	00044443	KSLG_MRN
+
+
+                             Table "datawarehouse.patient_identifier"
+     Column      |            Type             | Modifiers | Storage  | Stats target | Description
+-----------------+-----------------------------+-----------+----------+--------------+-------------
+ patient_id      | bigint                      | not null  | plain    |              |
+ identifier      | character varying(255)      | not null  | extended |              |
+ member_type     | character varying(255)      |           | extended |              |
+ id_type         | character varying(255)      |           | extended |              |
+ member_pin      | character varying(255)      |           | extended |              |
+ member_category | character varying(255)      |           | extended |              |
+ voided          | boolean                     |           | plain    |              |
+ voided_by       | character varying(255)      |           | extended |              |
+ voided_date     | timestamp without time zone |           | plain    |              |
+ voided_remarks  | character varying(255)      |           | extended |              |
+Indexes:
+    "patient_identifier_patient_id_idx" btree (patient_id)
+Foreign-key constraints:
+    "FK_4bul8bnawnujn8tg1sq2l94fq" FOREIGN KEY (patient_id) REFERENCES patient(id)
+Distributed by: (patient_id)
+
+
+select patient_id, identifier, id_type, count(1) from patient_identifier group by patient_id, identifier, id_type having count(1) > 1;
+select count(1) from patient_identifier;
+
+
+--national id (newic)
+INSERT INTO datawarehouse.patient_identifier (patient_id, identifier, id_type, voided)
+SELECT dw.id, stg.newic, 'NATIONAL_ID', 'f'
+FROM datawarehouse.patient dw JOIN
+(SELECT dw_patient_id, newic FROM staging_mdmhits2_klgsh.patients WHERE newic IS NOT NULL UNION SELECT dw_patient_id, newic FROM staging_mdmhits2_kslg.patients WHERE newic IS NOT NULL) stg
+ON dw.id = stg.dw_patient_id;
+
+--KLGSH_MRN (mrn)
+INSERT INTO datawarehouse.patient_identifier (patient_id, identifier, id_type, voided)
+	SELECT DISTINCT dw.id, stg.mrnnumber, 'KLGSH_MRN', CAST('f' AS boolean)
+	FROM datawarehouse.patient dw JOIN staging_mdmhits2_klgsh.patients stg 
+		ON dw.id = stg.dw_patient_id
+	WHERE stg.mrnnumber IS NOT NULL;
+
+--KSLG_MRN (mrn)
+INSERT INTO datawarehouse.patient_identifier (patient_id, identifier, id_type, voided)
+	SELECT DISTINCT dw.id, stg.mrnnumber, 'KSLG_MRN', CAST('f' AS boolean)
+	FROM datawarehouse.patient dw JOIN staging_mdmhits2_kslg.patients stg 
+		ON dw.id = stg.dw_patient_id
+	WHERE stg.mrnnumber IS NOT NULL;
+
+
+
+
+
+
+SELECT dw_patient_id, id, newic, COUNT(1) FROM
+(SELECT dw_patient_id, id, newic FROM staging_mdmhits2_klgsh.patients UNION SELECT dw_patient_id, id, newic FROM staging_mdmhits2_kslg.patients) X
+GROUP BY dw_patient_id, id, newic HAVING COUNT(1) > 1;
+--0
+
+INSERT INTO datawarehouse.patient_identifier (patient_id, identifier, member_type, id_type, member_pin, member_category, voided, voided_by, voided_date, voided_remarks)
+SELECT dw.id, stg.newic, NULL, 'NATIONAL_ID', NULL, NULL, NULL, NULL, NULL, NULL
+FROM datawarehouse.patient dw JOIN
+(SELECT dw_patient_id, newic FROM staging_mdmhits2_klgsh.patients WHERE newic IS NOT NULL UNION SELECT dw_patient_id, newic FROM staging_mdmhits2_kslg.patients WHERE newic IS NOT NULL) stg
+ON dw.id = stg.dw_patient_id;
+
+
+INSERT INTO datawarehouse.patient_identifier (patient_id, identifier, member_type, id_type, member_pin, member_category, voided, voided_by, voided_date, voided_remarks)
+SELECT dw.id, stg.mrnnumber, NULL, 'NATIONAL_ID', NULL, NULL, NULL, NULL, NULL, NULL
+FROM datawarehouse.patient dw JOIN
+(SELECT dw_patient_id, mrnnumber FROM staging_mdmhits2_klgsh.patients WHERE mrnnumber IS NOT NULL UNION SELECT dw_patient_id, mrnnumber FROM staging_mdmhits2_kslg.patients WHERE mrnnumber IS NOT NULL) stg
+ON dw.id = stg.dw_patient_id;
+
+    2594991 | 531849     | KSLG_MRN |     3
+
+
+SELECT * FROM
+(SELECT dw_patient_id, newic FROM staging_mdmhits2_klgsh.patients UNION SELECT dw_patient_id, newic FROM staging_mdmhits2_kslg.patients) X
+WHERE newic = '700925106067';
+
+SELECT dw.id, stg.mrnnumber, NULL, 'NATIONAL_ID', NULL, NULL, NULL, NULL, NULL, NULL
+FROM datawarehouse.patient dw JOIN
+(SELECT dw_patient_id, mrnnumber FROM staging_mdmhits2_klgsh.patients WHERE mrnnumber IS NOT NULL UNION SELECT dw_patient_id, mrnnumber FROM staging_mdmhits2_kslg.patients WHERE mrnnumber IS NOT NULL) stg
+ON dw.id = stg.dw_patient_id WHERE mrnnumber = '531849'; 
+
+select * from staging_mdmhits2_klgsh.patients WHERE mrnnumber = '531849';
+--0
+
+select dw_patient_id, id, mrnnumber, updatedate from staging_mdmhits2_kslg.patients WHERE mrnnumber = '531849';
+
+
+

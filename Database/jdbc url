@@ -1,0 +1,4 @@
+jdbc:jdbcodbc:DSN="hisdb_apsh";Driver="cdata.jdbc.jdbcodbc.JDBCODBCDriver";Password="Hits2692";User="mdmhits";
+
+
+jdbc:jdbcodbc:DSN="hrmdb_apsh";Driver="cdata.jdbc.jdbcodbc.JDBCODBCDriver";Password="Hits2692";User="mdmhits";

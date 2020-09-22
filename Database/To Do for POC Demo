@@ -1,0 +1,202 @@
+1. Create a diagram for Greenplum and ETL. -- DONE.
+
+2. How many patients active for the last 5 years. -- DONE
+
+3. Demo CDC (change data capture). -- see "patient CDC legwork 09162020" and "fn_kpj_patient_cdc.sql"
+
+4. 4. Turn on logging din ng greenplum for audit trail -- DONE.
+
+--4. Create Data Governance diagram. (via API layer)
+
+
+
+
+2. SELECT count(1)
+FROM datawarehouse.patient a JOIN datawarehouse.encounter b
+ON a.id = b.patient_id
+WHERE admission_dt <= now() AND admission_dt >= (now() - '5 years'::interval);
+
+
+select max(admission_dt) from datawarehouse.encounter;
+
+
+
+SELECT a.given_name, COUNT(1)
+FROM datawarehouse.patient a JOIN datawarehouse.encounter b
+ON a.id = b.patient_id
+WHERE admission_dt >= (now() - '5 years'::interval) AND admission_dt <= now()
+GROUP BY a.given_name
+ORDER BY COUNT(1) DESC LIMIT 10;
+             given_name              | count
+-------------------------------------+-------
+ ROSLAN BIN BAHAROM                  |   350
+ MOHAMMAD BIN ABDUL RAUB             |   341
+ SAMSIAH BINTI LONG                  |   334
+ MUNJIAH BINTI SAMUT                 |   330
+ ABDUL RAHMAN ABDUL HAMID(HO DR.SITI |   327
+ MASLAN BIN MOKRI                    |   325
+ PRATHIBA RAJ A/L V K ARUNASALAM     |   322
+ POH TIONG FOCK                      |   321
+ ISMAIL BIN ALI                      |   320
+ MOHAMMAD ZUBIR BIN MOHD ISA         |   319
+(10 rows)
+
+SELECT a.given_name, EXTRACT(year FROM admission_dt) AS year, EXTRACT(month FROM admission_dt) AS month, COUNT(1)
+FROM datawarehouse.patient a JOIN datawarehouse.encounter b
+ON a.id = b.patient_id
+WHERE admission_dt >= (now() - '5 years'::interval) AND admission_dt <= now()
+GROUP BY a.given_name, EXTRACT(year FROM admission_dt), EXTRACT(month FROM admission_dt)
+ORDER BY COUNT(1) DESC LIMIT 50;
+            given_name             | year | month | count
+-----------------------------------+------+-------+-------
+ TAN CHEE HUAT                     | 2019 |     8 |    34
+ HAJAR BINTI OSMAN                 | 2019 |    12 |    33
+ NORAZLAN BIN KAMARUDIN            | 2018 |    12 |    28
+ NORAZLAN BIN KAMARUDIN            | 2018 |    11 |    28
+ MOHAMMAD BIN ABDUL RAUB           | 2018 |    10 |    27
+ SUHADAH BINTI MOHAMAD TARMIZI     | 2018 |    12 |    26
+ NURUL AINI BINTI IBRAHIM          | 2019 |     4 |    26
+ WAN ROSLI BIN WAN SALEH           | 2018 |    10 |    25
+ THAVAMMANI A/L PALANIYANDY        | 2018 |     5 |    25
+ SITI ASIAH BT MAT                 | 2018 |     7 |    25
+ SAMSIAH BINTI LONG                | 2019 |     5 |    25
+ NASHARUDIN BIN ADNAN              | 2018 |    11 |    25
+ SIVAKUMAR A/L KUPPUSAMY           | 2019 |    11 |    25
+ MOHAMMAD BIN ABDUL RAUB           | 2018 |     5 |    25
+ MOHAMMAD BIN SEMAN                | 2019 |     3 |    25
+ MOHD SAHARUDIN BIN ZAINAL         | 2018 |    12 |    25
+ SAMSIAH BINTI LONG                | 2019 |     4 |    24
+ NUR DIYANA KAMILAH BINTI MD AKHIR | 2019 |     3 |    24
+ HAJAR BINTI OSMAN                 | 2020 |     1 |    24
+ SAMSIAH BINTI LONG                | 2019 |     3 |    24
+ SAMSIAH BINTI LONG                | 2019 |    10 |    24
+ MOHAMMAD BIN ABDUL RAUB           | 2018 |     7 |    24
+ NURUL AINI BINTI IBRAHIM          | 2019 |     5 |    24
+ MASLAN BIN MOKRI                  | 2018 |     2 |    23
+ SAMSIAH BINTI LONG                | 2019 |    11 |    23
+ NURUL AINI BINTI IBRAHIM          | 2019 |     6 |    23
+ SAMSIAH BINTI LONG                | 2020 |     1 |    23
+ MUNJIAH BINTI SAMUT               | 2018 |     2 |    23
+ MOHAMMAD BIN ABDUL RAUB           | 2018 |     9 |    23
+ MOHAMMAD BIN ABDUL RAUB           | 2018 |     8 |    23
+ NURUL HIDAYAH BINTI MOHD FUAD     | 2019 |     6 |    22
+ LATIFAH BINTI ISMAIL              | 2018 |     2 |    22
+ NASHARUDIN BIN ADNAN              | 2018 |    12 |    22
+ SAMSIAH BINTI LONG                | 2019 |     1 |    22
+ LUQMAN HAKIM BIN SHAMSUL MUZLI    | 2019 |    11 |    22
+
+
+SELECT EXTRACT(year FROM admission_dt) AS year, COUNT(1)
+FROM datawarehouse.patient a JOIN datawarehouse.encounter b
+ON a.id = b.patient_id
+WHERE admission_dt >= (now() - '5 years'::interval) AND admission_dt <= now()
+GROUP BY EXTRACT(year FROM admission_dt) 
+ORDER BY COUNT(1) DESC LIMIT 10;
+ year | count
+------+--------
+ 2019 | 223836
+ 2018 | 165239
+ 2017 |  59487
+ 2016 |  50330
+ 2020 |  44015
+ 2015 |  12554
+(6 rows)
+
+
+SELECT EXTRACT(year FROM admission_dt) AS year,
+	COUNT(1)
+FROM datawarehouse.patient a JOIN datawarehouse.encounter b
+ON a.id = b.patient_id
+GROUP BY EXTRACT(year FROM admission_dt)
+ORDER BY EXTRACT(year FROM admission_dt);
+ year | count
+------+--------
+ 1996 |    988
+ 1997 |   1522
+ 1998 |   1194
+ 1999 |   1112
+ 2000 |   7319
+ 2001 |  15518
+ 2002 |  16155
+ 2003 |  15678
+ 2004 |  17964
+ 2005 |  15519
+ 2006 |  17137
+ 2007 |  19781
+ 2008 |  21248
+ 2009 |  24748
+ 2010 |  33626
+ 2011 |  28946
+ 2012 |  30496
+ 2013 |  35643
+ 2014 |  43045
+ 2015 |  45894
+ 2016 |  50330
+ 2017 |  59487
+ 2018 | 165239
+ 2019 | 223836
+ 2020 |  44015
+      |   8649
+(26 rows)
+
+
+
+/***********/
+
+3.1
+
+
+SELECT name, gender, dateofbirth, dw_patient_id, COUNT(1) FROM staging_mdmhits2_klgsh.patients GROUP BY name, gender, dateofbirth, dw_patient_id HAVING COUNT(1) > 1 ORDER BY dw_patient_id LIMIT 10;
+                  name                  | gender |     dateofbirth     | dw_patient_id | count
+----------------------------------------+--------+---------------------+---------------+-------
+ A'ISHAH HUMAIRA' BINTI SHAHRUL RIDHWAN | FEMALE | 2013-01-17 00:00:00 |           925 |     2
+ MUHAMMAD NAZRIN BIN AZMI               | MALE   | 1990-04-29 00:00:00 |          3056 |     2
+ WONG CHEE KHUAN                        | MALE   | 1935-02-28 00:00:00 |          4367 |     2
+ KUMARAN A/L VEERASAMY                  | MALE   | 1971-01-17 00:00:00 |          6167 |     2
+ KHOR YILIN                             | FEMALE | 1987-04-03 00:00:00 |          9522 |     2
+ MUHAMMAD ADAM ZIQRI BIN MOHD ZAIDI     | MALE   | 2011-03-24 00:00:00 |         13803 |     2
+ NUR HAJAR BINTI MAMAT                  | FEMALE | 1987-09-07 00:00:00 |         14967 |     2
+ NG MEI MEI                             | FEMALE | 1985-06-27 00:00:00 |         16494 |     2
+ TONG WEI HONG                          | MALE   | 1989-09-26 00:00:00 |         16611 |     2
+ TIEN GUAT                              | FEMALE | 1953-04-03 00:00:00 |         22301 |     2
+(10 rows)
+
+
+SELECT name, gender, dateofbirth, dw_patient_id, updatedate FROM staging_mdmhits2_klgsh.patients WHERE dw_patient_id = 925;
+                  name                  | gender |     dateofbirth     | dw_patient_id |       updatedate
+----------------------------------------+--------+---------------------+---------------+-------------------------
+ A'ISHAH HUMAIRA' BINTI SHAHRUL RIDHWAN | FEMALE | 2013-01-17 00:00:00 |           925 | 2019-04-11 11:32:22.29
+ A'ISHAH HUMAIRA' BINTI SHAHRUL RIDHWAN | FEMALE | 2013-01-17 00:00:00 |           925 | 2019-04-11 11:25:03.193
+(2 rows)
+
+--SELECT * FROM datawarehouse.patient
+--WHERE given_name = 'TAN WAN QIAN' AND gender = 'F' AND birth_dt = '1998-04-19 00:00:00';
+
+SELECT given_name, gender, birth_dt FROM datawarehouse.patient WHERE id = 925;
+
+kpj2=# SELECT given_name, gender, birth_dt FROM datawarehouse.patient WHERE id = 925;
+               given_name               | gender |      birth_dt
+----------------------------------------+--------+---------------------
+ A'ISHAH HUMAIRA' BINTI SHAHRUL RIDHWAN | FEMALE | 2013-01-17 00:00:00
+(1 row)
+
+
+
+SELECT name, gender, dateofbirth, dw_patient_id, updatedate FROM staging_mdmhits2_klgsh.patients WHERE dw_patient_id = 3056;
+           name           | gender |     dateofbirth     | dw_patient_id |       updatedate
+--------------------------+--------+---------------------+---------------+-------------------------
+ MUHAMMAD NAZRIN BIN AZMI | MALE   | 1990-04-29 00:00:00 |          3056 | 2019-04-11 11:29:57.797
+ MUHAMMAD NAZRIN BIN AZMI | MALE   | 1990-04-29 00:00:00 |          3056 | 2019-04-11 11:29:49.057
+(2 rows)
+
+SELECT given_name, gender, birth_dt FROM datawarehouse.patient WHERE id = 3056;
+        given_name        | gender |      birth_dt
+--------------------------+--------+---------------------
+ MUHAMMAD NAZRIN BIN AZMI | MALE   | 1990-04-29 00:00:00
+
+
+
+
+
+
+

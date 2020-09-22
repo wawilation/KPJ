@@ -1,0 +1,21 @@
+update patient set language='TAMIL' where language='TAM';
+update patient set language=null where language='OTH';
+update patient set language='CHINESE' where language='CHI';
+update patient set language='ENGLISH' where language='ENG';
+update patient set language='MALAY' where language='MAL';
+
+
+UPDATE datawarehouse.patient
+SET language = 
+(CASE language
+WHEN 'TAM' THEN 'TAMIL'
+WHEN 'CHI' THEN 'CHINESE'
+WHEN 'ENG' THEN 'ENGLISH'
+WHEN 'MAL' THEN 'MALAY'
+WHEN 'OTH' THEN NULL
+ELSE NULL
+END);
+
+
+
+

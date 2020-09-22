@@ -1,0 +1,18 @@
+
+-rw-------  1 gpadmin gpadmin 1.1G Sep 17 00:02 gpdb-2020-09-17_000000.csv
+-rw-------  1 gpadmin gpadmin 1.1G Sep 17 00:02 gpdb-2020-09-17_000221.csv
+-rw-------  1 gpadmin gpadmin 1.1G Sep 17 00:03 gpdb-2020-09-17_000248.csv
+
+gplogfilter -b '2020-09-17 00:00' -e '2020-09-17 23:59'
+
+gplogfilter -b '2020-09-17 00:00' -e '2020-09-17 23:59' -t 
+
+gplogfilter -b '2020-09-17 00:00' -e '2020-09-17 23:59' -f 'DELETE' gpdb-2020-09-17_000000.csv
+
+gplogfilter -b '2020-09-17 00:00' -e '2020-09-17 23:59' gpdb-2020-09-17_000221.csv
+
+SELECT * FROM gp_toolkit.gp_log_database
+WHERE logtime >= '2020-09-17 00:00' AND logtime <=  '2020-09-17 23:59' 
+AND logdatabase = 'kpj' LIMIT 10;
+
+

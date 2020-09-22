@@ -1,0 +1,175 @@
+order_billing_detail:
+
+id
+created_by
+created_date
+updated_by
+updated_date
+amount
+description
+item_code
+order_date
+order_no
+quantity
+service_item_code
+billing_header_id
+department_id
+order_payment_status
+classification
+hmo_item
+immediate_payment_receipt_no
+perf_department_id
+cancelled
+stat
+scheduled_date
+discount_amount_immediate
+discount_amount_auto
+discount_type_auto
+discount_type_immediate
+package_order_no
+dispensed
+dispense_date
+doh
+credit_limit
+item_tag
+free_good
+queue_no
+package_item_amount
+auto_dispense
+ref_receipt_no
+
+CREATE SEQUENCE order_billing_detail_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER TABLE datawarehouse.order_billing_detail ALTER COLUMN id SET DEFAULT nextval('order_billing_detail_seq'::regclass);
+
+--to get billing header id, join to episodes to get dw_encounter_id then join to datawarehouse.billing_header on dw_encounter_id=billing_header.billing_encounter and billing_header.billing_header_type='IMMEDIATE'
+--join to departments and use dw_dept_id
+--join to departments and use dw_dept_id
+
+INSERT INTO order_billing_detail
+SELECT NEXTVAL('order_billing_detail_seq') - 1, V.* FROM
+(SELECT 
+	CURRENT_DATE AS created_by,
+	ctxn.updatedate AS created_date,
+	CURRENT_DATE AS updated_by,
+	ctxn.updatedate AS updated_date,
+	ctxn.amount AS amount,
+	cmast.description AS description,
+	ctxn.chargemasterid AS item_code,
+	ctxn.transdate AS order_date,
+	'KLGSH' || ctxn.id AS order_no,
+	ctxn.quantity AS quantity,
+	cmast.description AS service_item_code,
+	bh.id AS billing_header_id,
+	dep.dw_dept_id AS department_id,
+	'DEFERRED' AS order_payment_status,
+	'OTHERS' AS classification,
+	CAST('f' AS boolean) AS hmo_item,
+	NULL AS immediate_payment_receipt_no,
+	(SELECT dw_dept_id FROM staging_mdmhits2_klgsh.departments WHERE id = COALESCE(ctxn.issuedepartmentid, ctxn.departmentid)) AS perf_department_id,
+	CAST('f' AS boolean) AS cancelled,		
+	CAST('f' AS boolean) AS stat,
+	CAST(NULL AS timestamp) AS scheduled_date,
+	COALESCE(ctxn.discountamount,0) AS discount_amount_immediate,
+	0 AS discount_amount_auto,
+	NULL AS discount_type_auto,
+	ctxn.discountcode AS discount_type_immediate,
+	'KLGSH' || ctxn.packageheaderid AS package_order_no,
+	ctxn.billed AS dispensed,
+	ctxn.billdate AS dispense_date,
+	CAST('f' AS boolean) AS doh,
+	CAST('f' AS boolean) AS credit_limit,
+	NULL AS item_tag,
+	CAST('f' AS boolean) AS free_good,
+	NULL AS queue_no,
+	0 AS package_item_amount,
+	CAST('f' AS boolean) AS auto_dispense,
+	NULL
+FROM
+staging_mdmhits2_klgsh.chargetransactions ctxn JOIN staging_mdmhits2_klgsh.chargemasters cmast
+	ON ctxn.chargemasterid = cmast.id
+JOIN staging_mdmhits2_klgsh.episodes ep
+	ON ep.id = ctxn.episodeid
+JOIN datawarehouse.billing_header bh
+	ON ep.dw_encounter_id = bh.billing_encounter
+JOIN staging_mdmhits2_klgsh.departments dep
+	ON dep.id = COALESCE(ctxn.departmentid, ctxn.issuedepartmentid)
+WHERE bh.billing_header_type = 'IMMEDIATE' AND (ctxn.departmentid IS NOT NULL OR ctxn.issuedepartmentid IS NOT NULL)
+
+UNION
+
+SELECT 
+	CURRENT_DATE AS created_by,
+	ctxn.updatedate AS created_date,
+	CURRENT_DATE AS updated_by,
+	ctxn.updatedate AS updated_date,
+	ctxn.amount AS amount,
+	cmast.description AS description,
+	ctxn.chargemasterid AS item_code,
+	ctxn.transdate AS order_date,
+	'KSLG' || ctxn.id AS order_no,
+	ctxn.quantity AS quantity,
+	cmast.description AS service_item_code,
+	bh.id AS billing_header_id,
+	dep.dw_dept_id AS department_id,
+	'DEFERRED' AS order_payment_status,
+	'OTHERS' AS classification,
+	CAST('f' AS boolean) AS hmo_item,
+	NULL AS immediate_payment_receipt_no,
+	(SELECT dw_dept_id FROM staging_mdmhits2_kslg.departments WHERE id = COALESCE(ctxn.issuedepartmentid, ctxn.departmentid)) AS perf_department_id,
+	CAST('f' AS boolean) AS cancelled,		
+	CAST('f' AS boolean) AS stat,
+	CAST(NULL AS timestamp) AS scheduled_date,
+	COALESCE(ctxn.discountamount,0) AS discount_amount_immediate,
+	0 AS discount_amount_auto,
+	NULL AS discount_type_auto,
+	ctxn.discountcode AS discount_type_immediate,
+	'KSLG' || ctxn.packageheaderid AS package_order_no,
+	ctxn.billed AS dispensed,
+	ctxn.billdate AS dispense_date,
+	CAST('f' AS boolean) AS doh,
+	CAST('f' AS boolean) AS credit_limit,
+	NULL AS item_tag,
+	CAST('f' AS boolean) AS free_good,
+	NULL AS queue_no,
+	0 AS package_item_amount,
+	CAST('f' AS boolean) AS auto_dispense,
+	NULL
+FROM
+staging_mdmhits2_kslg.chargetransactions ctxn JOIN staging_mdmhits2_kslg.chargemasters cmast
+	ON ctxn.chargemasterid = cmast.id
+JOIN staging_mdmhits2_kslg.episodes ep
+	ON ep.id = ctxn.episodeid
+JOIN datawarehouse.billing_header bh
+	ON ep.dw_encounter_id = bh.billing_encounter
+JOIN staging_mdmhits2_kslg.departments dep
+	ON dep.id = COALESCE(ctxn.departmentid, ctxn.issuedepartmentid)
+WHERE bh.billing_header_type = 'IMMEDIATE' AND (ctxn.departmentid IS NOT NULL OR ctxn.issuedepartmentid IS NOT NULL)) V;
+
+
+select setval('order_billing_detail_seq',1);
+truncate table order_billing_detail cascade;
+
+vacuum analyze staging_mdmhits2_klgsh.chargetransactions;
+vacuum analyze staging_mdmhits2_klgsh.chargemasters;
+vacuum analyze staging_mdmhits2_klgsh.episodes;
+vacuum analyze datawarehouse.billing_header;
+vacuum analyze staging_mdmhits2_klgsh.departments;
+vacuum analyze staging_mdmhits2_kslg.chargetransactions;
+vacuum analyze staging_mdmhits2_kslg.chargemasters;
+vacuum analyze staging_mdmhits2_kslg.episodes;
+vacuum analyze staging_mdmhits2_kslg.departments;
+vacuum analyze datawarehouse.order_billing_detail;
+
+select fn_kpj_order_billing_detail();
+
+
+
+
+
+

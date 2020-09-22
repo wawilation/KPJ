@@ -1,0 +1,239 @@
+txn_prescription
+
+CREATE SEQUENCE txn_prescription_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER TABLE datawarehouse.txn_prescription ALTER COLUMN id SET DEFAULT nextval('txn_prescription_seq'::regclass);
+
+
+--pin from datawarehouse.patient, see complete query below:
+SELECT * FROM staging_medcubeskpj.patientmedprescription a inner join staging_medcubeskpj.patient b on a.patientid=b.patientid inner join datawarehouse.patient c on c.id=b.dw_patient_id inner join staging_medcubeskpj.patientmeddosage d on d.patientmedprescriptionpkid=a.pkid where medicationdrugid is not null limit 1
+
+--txn_prescription
+INSERT INTO datawarehouse.txn_prescription
+SELECT NEXTVAL('txn_prescription_seq') - 1
+
+, V.*
+FROM
+(SELECT
+	CURRENT_DATE AS created_by,
+	pmed.createddatetime AS created_date,
+	CURRENT_DATE AS updated_by,
+	pmed.createddatetime AS updated_date,
+	0 AS version,
+	0 AS list_index,
+	0 AS document_id,
+	'DPRESCTYPE1' AS type,
+	dw_pat.pin AS pin
+FROM staging_medcubeskpj.patientmedprescription pmed JOIN staging_medcubeskpj.patient stg_pat
+	ON pmed.patientid = stg_pat.patientid
+JOIN datawarehouse.patient dw_pat
+	ON dw_pat.id = stg_pat.dw_patient_id
+JOIN staging_medcubeskpj.patientmeddosage pmeddos
+	ON pmeddos.patientmedprescriptionpkid = pmed.pkid
+WHERE pmeddos.medicationdrugid IS NOT NULL
+
+UNION
+
+SELECT
+	CURRENT_DATE AS created_by,
+	pmed.createddatetime AS created_date,
+	CURRENT_DATE AS updated_by,
+	pmed.createddatetime AS updated_date,
+	0 AS version,
+	0 AS list_index,
+	0 AS document_id,
+	'DPRESCTYPE1' AS type,
+	dw_pat.pin AS pin
+FROM staging_medcubeskpj_selangor.patientmedprescription pmed JOIN staging_medcubeskpj_selangor.patient stg_pat
+	ON pmed.patientid = stg_pat.patientid
+JOIN datawarehouse.patient dw_pat
+	ON dw_pat.id = stg_pat.dw_patient_id
+JOIN staging_medcubeskpj_selangor.patientmeddosage pmeddos
+	ON pmeddos.patientmedprescriptionpkid = pmed.pkid
+WHERE pmeddos.medicationdrugid IS NOT NULL) V;
+
+
+
+-----------------
+
+WITH txn_prescription_ins AS		
+(		SELECT
+			CURRENT_DATE AS created_by,
+			pmed.createddatetime AS created_date,
+			CURRENT_DATE AS updated_by,
+			pmed.createddatetime AS updated_date,
+			0 AS version,
+			0 AS list_index,
+			0 AS document_id,
+			'DPRESCTYPE1' AS type,
+			dw_pat.pin AS pin,
+			--txn_prescription_detail cols
+			pmeddos.createddatetime AS pmeddos_createddatetime,
+			pmeddos.syntaxfulltext AS pmeddos_dosage,
+			pmeddos.validto AS pmeddos_end_date,
+			pmeddos.medicationdrugid AS pmeddos_item_code,
+			COALESCE(pmeddos.chargeqty,0) AS pmeddos_quantity,
+			pmeddos.syntax AS pmeddos_sig_remarks,
+			pmeddos.validfrom AS pmeddos_start_date
+
+		FROM staging_medcubeskpj.patientmedprescription pmed JOIN staging_medcubeskpj.patient stg_pat
+			ON pmed.patientid = stg_pat.patientid
+		JOIN datawarehouse.patient dw_pat
+			ON dw_pat.id = stg_pat.dw_patient_id
+		JOIN staging_medcubeskpj.patientmeddosage pmeddos
+			ON pmeddos.patientmedprescriptionpkid = pmed.pkid
+		WHERE pmeddos.medicationdrugid IS NOT NULL
+
+		UNION
+
+		SELECT
+			CURRENT_DATE AS created_by,
+			pmed.createddatetime AS created_date,
+			CURRENT_DATE AS updated_by,
+			pmed.createddatetime AS updated_date,
+			0 AS version,
+			0 AS list_index,
+			0 AS document_id,
+			'DPRESCTYPE1' AS type,
+			dw_pat.pin AS pin,
+			--txn_prescription_detail cols
+			pmeddos.createddatetime AS pmeddos_createddatetime,
+			pmeddos.syntaxfulltext AS pmeddos_dosage,
+			pmeddos.validto AS pmeddos_end_date,
+			pmeddos.medicationdrugid AS pmeddos_item_code,
+			COALESCE(pmeddos.chargeqty,0) AS pmeddos_quantity,
+			pmeddos.syntax AS pmeddos_sig_remarks,
+			pmeddos.validfrom AS pmeddos_start_date
+
+		FROM staging_medcubeskpj_selangor.patientmedprescription pmed JOIN staging_medcubeskpj_selangor.patient stg_pat
+			ON pmed.patientid = stg_pat.patientid
+		JOIN datawarehouse.patient dw_pat
+			ON dw_pat.id = stg_pat.dw_patient_id
+		JOIN staging_medcubeskpj_selangor.patientmeddosage pmeddos
+			ON pmeddos.patientmedprescriptionpkid = pmed.pkid
+		WHERE pmeddos.medicationdrugid IS NOT NULL
+)
+
+
+
+
+
+
+
+
+CREATE TEMPORARY TABLE tmp_txn_prescription
+(id bigint,
+created_date timestamp,
+updated_date timestamp,
+pin varchar(16),
+pmeddos_createddatetime timestamp,
+pmeddos_dosage varchar(2000),
+pmeddos_end_date timestamp,
+pmeddos_item_code varchar(255),
+pmeddos_quantity double precision,
+pmeddos_sig_remarks varchar(2000),
+pmeddos_start_date timestamp)
+DISTRIBUTED BY (id);	
+
+INSERT INTO tmp_txn_prescription
+SELECT NEXTVAL('txn_prescription_seq') - 1, V.*
+FROM
+(		SELECT
+			pmed.createddatetime AS created_date,
+			pmed.createddatetime AS updated_date,
+			dw_pat.pin AS pin,
+			--txn_prescription_detail cols
+			pmeddos.createddatetime AS pmeddos_createddatetime,
+			pmeddos.syntaxfulltext AS pmeddos_dosage,
+			pmeddos.validto AS pmeddos_end_date,
+			pmeddos.medicationdrugid AS pmeddos_item_code,
+			COALESCE(pmeddos.chargeqty,0) AS pmeddos_quantity,
+			pmeddos.syntax AS pmeddos_sig_remarks,
+			pmeddos.validfrom AS pmeddos_start_date
+
+		FROM staging_medcubeskpj.patientmedprescription pmed JOIN staging_medcubeskpj.patient stg_pat
+			ON pmed.patientid = stg_pat.patientid
+		JOIN datawarehouse.patient dw_pat
+			ON dw_pat.id = stg_pat.dw_patient_id
+		JOIN staging_medcubeskpj.patientmeddosage pmeddos
+			ON pmeddos.patientmedprescriptionpkid = pmed.pkid
+		WHERE pmeddos.medicationdrugid IS NOT NULL
+
+		UNION
+
+		SELECT
+			pmed.createddatetime AS created_date,
+			pmed.createddatetime AS updated_date,
+			dw_pat.pin AS pin,
+			--txn_prescription_detail cols
+			pmeddos.createddatetime AS pmeddos_createddatetime,
+			pmeddos.syntaxfulltext AS pmeddos_dosage,
+			pmeddos.validto AS pmeddos_end_date,
+			pmeddos.medicationdrugid AS pmeddos_item_code,
+			COALESCE(pmeddos.chargeqty,0) AS pmeddos_quantity,
+			pmeddos.syntax AS pmeddos_sig_remarks,
+			pmeddos.validfrom AS pmeddos_start_date
+
+		FROM staging_medcubeskpj_selangor.patientmedprescription pmed JOIN staging_medcubeskpj_selangor.patient stg_pat
+			ON pmed.patientid = stg_pat.patientid
+		JOIN datawarehouse.patient dw_pat
+			ON dw_pat.id = stg_pat.dw_patient_id
+		JOIN staging_medcubeskpj_selangor.patientmeddosage pmeddos
+			ON pmeddos.patientmedprescriptionpkid = pmed.pkid
+		WHERE pmeddos.medicationdrugid IS NOT NULL
+) V;		
+
+INSERT INTO datawarehouse.txn_prescription
+SELECT 
+	id,
+	CURRENT_DATE,
+	created_date,
+	CURRENT_DATE,
+	updated_date,
+	0,
+	0,
+	0,
+	'DPRESCTYPE1' AS type,
+	pin
+FROM tmp_txn_prescription;
+
+INSERT INTO datawarehouse.txn_prescription_detail
+SELECT 
+	id,
+	CURRENT_DATE,
+	pmeddos_createddatetime,
+	CURRENT_DATE,
+	pmeddos_createddatetime,
+	0,
+	pmeddos_dosage,
+	pmeddos_end_date,
+	pmeddos_item_code,
+	0,
+	pmeddos_quantity,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	pmeddos_sig_remarks,
+	pmeddos_start_date,
+	id,
+	NULL
+FROM tmp_txn_prescription;
+
+
+truncate table datawarehouse.txn_prescription cascade;
+truncate table datawarehouse.txn_prescription_detail;
+select setval('txn_prescription_seq',1);
+
+	
+select count(1) from datawarehouse.txn_prescription;
+select count(1) from datawarehouse.txn_prescription_detail;
+
+
+

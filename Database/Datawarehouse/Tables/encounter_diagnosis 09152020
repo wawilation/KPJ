@@ -1,0 +1,117 @@
+encounter_diagnosis
+id			bigint
+created_by		character varying(250)
+created_date		timestamp without time zone
+updated_by		character varying(250)
+updated_date		timestamp without time zone
+description		text
+type			character varying(255)
+visit_id		bigint
+code			character varying(255)
+display_value		text
+diagnosis_summary	text
+document_id		bigint
+
+source: episodediagnosis
+                          Table "staging_mdmhits2_klgsh.episodediagnosis"
+     Column      |            Type             | Modifiers | Storage  | Stats target | Description
+-----------------+-----------------------------+-----------+----------+--------------+-------------
+ id              | character varying(36)       | not null  | extended |              |
+ episodeid       | character varying(36)       | not null  | extended |              |
+ diagnosisid     | character varying(36)       | not null  | extended |              |
+ episodedoctorid | character varying(36)       |           | extended |              |
+ vaspatient      | character varying(50)       |           | extended |              |
+ vasdoctor       | character varying(50)       |           | extended |              |
+ remarks         | character varying(75)       |           | extended |              |
+ diagnosisdate   | timestamp without time zone | not null  | plain    |              |
+ companyid       | character varying(36)       | not null  | extended |              |
+ status          | character varying(3)        | not null  | extended |              |
+ updateuserid    | character varying(36)       | not null  | extended |              |
+ updatedate      | timestamp without time zone | not null  | plain    |              |
+ noteexist       | boolean                     |           | plain    |              |
+ icdcodeno       | integer                     |           | plain    |              |
+Distributed by: (id)
+
+--id, episodeid, diagnosisid, episodedoctorid, vaspatient, vasdoctor, remarks, diagnosisdate, companyid, status, updateuserid, updatedate, noteexist, icdcodeno
+
+--additional: description	text				episodediagnosis	diagnosisid	
+left join to datawarehouse.ref_icd10 on diagnosisid=ref_icd10.code and get description, possibly null if no matching code on ref_icd10			
+
+INSERT INTO datawarehouse.encounter_diagnosis
+SELECT 
+	NEXTVAL('encounter_diagnosis_seq') - 1,
+	CURRENT_DATE,
+	V.diagnosisdate,
+	CURRENT_DATE,
+	V.diagnosisdate,
+	CAST(NULL AS timestamp),
+	'FINAL',
+	V.dw_encounter_id,
+	NULL,
+	V.diagnosisid,
+	NULL,		
+	NULL
+FROM
+(SELECT ep.dw_encounter_id, epdiag.diagnosisid, epdiag.diagnosisdate
+FROM staging_mdmhits2_klgsh.episodediagnosis epdiag JOIN staging_mdmhits2_klgsh.episodes ep
+	ON epdiag.episodeid = ep.id
+
+UNION
+
+SELECT ep.dw_encounter_id, epdiag.diagnosisid, epdiag.diagnosisdate
+FROM staging_mdmhits2_kslg.episodediagnosis epdiag JOIN staging_mdmhits2_kslg.episodes ep
+	ON epdiag.episodeid = ep.id) V;
+
+--description
+UPDATE datawarehouse.encounter_diagnosis diag
+SET description = ref.description
+FROM staging_mdmhits2_klgsh.episodediagnosis epdiag JOIN datawarehouse.ref_icd10 ref
+	ON epdiag.diagnosisid = ref.code;
+
+UPDATE datawarehouse.encounter_diagnosis diag
+SET description = ref.description
+FROM staging_mdmhits2_kslg.episodediagnosis epdiag JOIN datawarehouse.ref_icd10 ref
+	ON epdiag.diagnosisid = ref.code;
+
+
+
+
+
+
+CREATE SEQUENCE encounter_diagnosis_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER TABLE datawarehouse.encounter_diagnosis ALTER COLUMN id SET DEFAULT nextval('encounter_diagnosis_seq'::regclass);
+
+select setval('encounter_diagnosis_seq',1);
+
+truncate table encounter cascade;
+truncate table billing_header cascade;
+truncate table encounter_doctor;
+truncate table encounter_diagnosis;
+select setval('encounter_seq',1);
+select setval('billing_header_seq',1);
+
+select fn_kpj_encounter();
+
+select count(1) from encounter;
+select count(1) from billing_header;
+select count(1) from encounter_doctor;
+select count(1) from encounter_diagnosis;
+
+
+ALTER TABLE staging_mdmhits2_kslg.episodediagnosis SET DISTRIBUTED BY (id, diagnosisid);
+ALTER TABLE staging_mdmhits2_klgsh.episodediagnosis SET DISTRIBUTED BY (id, diagnosisid);
+
+ALTER TABLE staging_mdmhits2_kslg.episodediagnosis SET DISTRIBUTED BY (id);
+ALTER TABLE staging_mdmhits2_klgsh.episodediagnosis SET DISTRIBUTED BY (id);
+
+
+
+
+
+

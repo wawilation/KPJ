@@ -1,0 +1,204 @@
+                               Table "staging_mdmhits2_klgsh.episodes"
+       Column       |            Type             | Modifiers | Storage  | Stats target | Description
+--------------------+-----------------------------+-----------+----------+--------------+-------------
+ id                 | character varying(36)       | not null  | extended |              |
+ episodeno          | integer                     | not null  | plain    |              |
+ episodetypeid      | character varying(36)       |           | extended |              |
+ registrationdate   | timestamp without time zone |           | plain    |              |
+ registrationtime   | timestamp without time zone |           | plain    |              |
+ registrationdeptid | character varying(36)       |           | extended |              |
+ adminsourceid      | character varying(36)       |           | extended |              |
+ bedtypeid          | character varying(36)       |           | extended |              |
+ wardid             | character varying(36)       |           | extended |              |
+ depositrequired    | boolean                     |           | plain    |              |
+ casetypeid         | character varying(36)       |           | extended |              |
+ treatment          | character varying(16)       |           | extended |              |
+ diagnosisid        | character varying(36)       |           | extended |              |
+ admittingdoctorid  | character varying(36)       |           | extended |              |
+ attendingdoctorid  | character varying(36)       |           | extended |              |
+ referringdoctorid  | character varying(36)       |           | extended |              |
+ iskcisdischarge    | boolean                     |           | plain    |              |
+ isdischarge        | boolean                     |           | plain    |              |
+ dischargedate      | timestamp without time zone |           | plain    |              |
+ dischargetime      | timestamp without time zone |           | plain    |              |
+ medrecord          | boolean                     |           | plain    |              |
+ destinationid      | character varying(36)       |           | extended |              |
+ diagnostic         | character varying(50)       |           | extended |              |
+ admissiondate      | timestamp without time zone |           | plain    |              |
+ admissiontime      | timestamp without time zone |           | plain    |              |
+ companyid          | character varying(36)       |           | extended |              |
+ previouslybilled   | boolean                     |           | plain    |              |
+ deposit            | numeric(21,8)               |           | main     |              |
+ billtypemasterid   | character varying(36)       |           | extended |              |
+ status             | character varying(50)       |           | extended |              |
+ noteexist          | boolean                     |           | plain    |              |
+ patientid          | character varying(36)       | not null  | extended |              |
+ payerid            | character varying(36)       |           | extended |              |
+ updatedate         | timestamp without time zone |           | plain    |              |
+ updateuserid       | character varying(36)       |           | extended |              |
+ otcpatienttype     | character varying(5)        |           | extended |              |
+ medcareepisodeno   | character varying(36)       |           | extended |              |
+Distributed by: (id)
+
+
+
+SELECT
+SELECT EP.id, EP.episodeno, EP.episodetypeid, EP.registrationdate, EP.registrationtime, EP.registrationdeptid, EP.adminsourceid, EP.bedtypeid, EP.wardid, EP.depositrequired, EP.casetypeid, EP.treatment,
+EP.diagnosisid, EP.admittingdoctorid, EP.attendingdoctorid, EP.referringdoctorid, EP.iskcisdischarge, EP.isdischarge, EP.dischargedate, EP.dischargetime, EP.medrecord, EP.destinationid,
+EP.diagnostic, EP.admissiondate, EP.admissiontime, EP.companyid, EP.previouslybilled, EP.deposit, EP.billtypemasterid, EP.status, EP.noteexist, EP.patientid, EP.payerid, EP.updatedate, EP.updateuserid,
+EP.otcpatienttype, EP.medcareepisodeno
+FROM
+(SELECT * FROM staging_mdmhits2_klgsh.episodes UNION SELECT * FROM staging_mdmhits2_kslg.episodes) EP
+
+
+
+INSERT INTO datawarehouse.encounter (created_by,created_date,updated_by,updated_date,acct_class,admission_dt,admission_type,discharge_dt,discharge_disposition,
+patient_class,room,room_type,visit_no,patient_id,room_class,room_in,credit_limit,version,admitted_by,vip,isolation,admission_case,guest,notify,migrate_flag)
+SELECT 
+CURRENT_DATE AS created_by,
+ep.updatedate AS created_date,
+CURRENT_DATE AS updated_by,
+ep.updatedate AS updated_date,
+'INDIVIDUAL' AS acct_class,
+ep.admissiondate AS admission_dt, 
+CASE WHEN ep.episodetypeid IN ('OTC','OP') THEN NULL
+     WHEN ep.episodetypeid IN ('IP','DP') THEN 'ROUTINE'
+     ELSE NULL
+END AS admission_type,
+ep.dischargedate AS discharge_dt, 
+CASE
+	WHEN ep.dischargedate IS NOT NULL THEN 'IMPROVED'
+	ELSE NULL
+END AS discharge_disposition,
+CASE
+	WHEN ep.episodetypeid = 'IP' THEN 'INPATIENT'
+	WHEN ep.episodetypeid IN ('OTC','OP','DP') THEN 'INPATIENT'
+END AS patient_class,
+ep.wardid AS room,
+'DEFAULT' AS room_type,
+'KLGSH' || ep.episodeno AS visit_no,
+pt.dw_patient_id AS patient_id,
+'DEFAULT' AS room_class,
+CAST('f' AS boolean) AS room_in,
+0 AS credit_limit,
+0 AS version,
+CURRENT_DATE AS admitted_by,
+CAST('f' AS boolean) AS vip,
+CAST('f' AS boolean) AS isolation,
+ep.casetypeid AS admission_case,
+CAST('f' AS boolean) AS guest,
+'N' as notify,
+'N' AS migrate_flag
+FROM staging_mdmhits2_klgsh.episodes ep JOIN staging_mdmhits2_klgsh.patients pt 
+	ON ep.patientid = pt.id
+
+UNION
+
+SELECT 
+CURRENT_DATE AS created_by,
+ep.updatedate AS created_date,
+CURRENT_DATE AS updated_by,
+ep.updatedate AS updated_date,
+'INDIVIDUAL' AS acct_class,
+ep.admissiondate AS admission_dt, 
+CASE WHEN ep.episodetypeid IN ('OTC','OP') THEN NULL
+     WHEN ep.episodetypeid IN ('IP','DP') THEN 'ROUTINE'
+     ELSE NULL
+END AS admission_type,
+ep.dischargedate AS discharge_dt, 
+CASE
+	WHEN ep.dischargedate IS NOT NULL THEN 'IMPROVED'
+	ELSE NULL
+END AS discharge_disposition,
+CASE
+	WHEN ep.episodetypeid = 'IP' THEN 'INPATIENT'
+	WHEN ep.episodetypeid IN ('OTC','OP','DP') THEN 'INPATIENT'
+END AS patient_class,
+ep.wardid AS room,
+'DEFAULT' AS room_type,
+'KSLG' || ep.episodeno AS visit_no,
+pt.dw_patient_id AS patient_id,
+'DEFAULT' AS room_class,
+CAST('f' AS boolean) AS room_in,
+0 AS credit_limit,
+0 AS version,
+CURRENT_DATE AS admitted_by,
+CAST('f' AS boolean) AS vip,
+CAST('f' AS boolean) AS isolation,
+ep.casetypeid AS admission_case,
+CAST('f' AS boolean) AS guest,
+'N' as notify,
+'N' AS migrate_flag
+FROM staging_mdmhits2_kslg.episodes ep JOIN staging_mdmhits2_kslg.patients pt 
+	ON ep.patientid = pt.id;
+--INSERT 0 947609
+
+
+update encounter set admission_case='CON' where admission_case='CONS';
+update encounter set admission_case='MAT' where admission_case='MATE';
+update encounter set admission_case='ORTH' where admission_case='ORTO';
+update encounter set admission_case='PAE' where admission_case='PAED';
+update encounter set admission_case='SUR' where admission_case='SURG';
+update encounter set admission_case='MR' where admission_case='MRpt';
+update encounter set admission_case='PSG' where admission_case='P.SG';
+update encounter set admission_case='OG' where admission_case='O&G';
+
+update encounter set pathologic=false,turn_in=false
+
+CREATE SEQUENCE encounter_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER TABLE datawarehouse.encounter ALTER COLUMN id SET DEFAULT nextval('encounter_seq'::regclass);
+
+select setval('encounter_seq',1);
+
+
+/****/
+
+ADD dw_encounter_id TO staging_mdmhits2_kslg.episodes AND staging_mdmhits2_klgsh.episodes
+
+ALTER TABLE staging_mdmhits2_kslg.episodes ADD COLUMN dw_encounter_id bigint NULL;
+
+ALTER TABLE staging_mdmhits2_klgsh.episodes ADD COLUMN dw_encounter_id bigint NULL;
+
+
+
+SELECT b.dw_dept_id as department_id FROM staging_mdmhits2_klgsh.episodes a left join departments b on a.registrationdeptid=b.code
+
+
+
+SELECT dep.dw_dept_id FROM staging_mdmhits2_klgsh.departments dep WHERE ep.registrationdeptid = dep.code
+
+
+CREATE SEQUENCE billing_header_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER TABLE datawarehouse.billing_header ALTER COLUMN id SET DEFAULT nextval('billing_header'::regclass);
+
+
+truncate table encounter cascade;
+truncate table billing_header cascade;
+truncate table encounter_doctor;
+truncate table encounter_diagnosis;
+
+select setval('encounter_seq',1);
+select setval('billing_header_seq',1);
+select setval('encounter_diagnosis_seq',1);
+
+select fn_kpj_encounter();
+
+
+
+
+
+
+
+

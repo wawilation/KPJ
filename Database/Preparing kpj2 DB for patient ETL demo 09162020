@@ -1,0 +1,26 @@
+pg_dump -v -d kpj -t datawarehouse.patient -s -Fp -f /home/gpadmin/dw_patient.sql
+pg_dump -v -d kpj -t datawarehouse.patient_identifier -s -Fp -f /home/gpadmin/dw_patient_identifier.sql
+
+
+
+psql "dbname=kpj2 options=--search_path=datawarehouse" -a -f /home/gpadmin/dw_patient.sql
+
+psql "dbname=kpj2 options=--search_path=datawarehouse" -a -f /home/gpadmin/dw_patient_identifier.sql
+
+
+alter table staging_mdmhits2_kslg.patients add column dw_patient_id bigint;
+alter table staging_mdmhits2_klgsh.patients add column dw_patient_id bigint;
+
+alter table staging_medcubeskpj.patient add column dw_patient_id bigint;
+alter table staging_medcubeskpj_selangor.patient add column dw_patient_id bigint;
+
+
+
+TRUNCATE TABLE patient cascade;
+TRUNCATE TABLE patient_identifier;
+select setval('patient_seq',1);
+VACUUM ANALYZE staging_mdmhits2_kslg.patients;
+VACUUM ANALYZE staging_mdmhits2_klgsh.patients;
+VACUUM ANALYZE datawarehouse.patient;
+VACUUM ANALYZE patient_identifier;
+select fn_kpj_patient();

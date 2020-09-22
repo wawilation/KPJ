@@ -1,0 +1,63 @@
+staging_mdmhits2_klgsh       | gpadmin
+ staging_mdmhits2_kslg        | gpadmin
+ staging_medcubeskpj          | gpadmin
+ staging_medcubeskpj_selangor | gpadmin
+
+
+
+
+
+select count(*)
+from pg_stat_user_tables
+where schemaname = 'staging_mdmhits2_klgsh' and left(relname,3) <> 'pxf';
+--406
+
+select count(*)
+from pg_stat_user_tables
+where schemaname = 'staging_mdmhits2_kslg' and left(relname,3) <> 'pxf';
+--406
+
+select count(*)
+from pg_stat_user_tables
+where schemaname = 'staging_medcubeskpj' and left(relname,3) <> 'pxf';
+--295
+
+select count(*)
+from pg_stat_user_tables
+where schemaname = 'staging_medcubeskpj_selangor' and left(relname,3) <> 'pxf';
+--295
+
+
+Table count per DB:
+mdmhits2_klgsh - 406
+mdmhits2_kslg - 406
+medcubeskpj - 295
+medcubeskpj_selangor - 295
+
+
+select 'VACUUM ANALYZE ' || relname || ';' from pg_stat_user_tables where schemaname = 'datawarehouse' and left(relname,3) <> 'pxf';
+
+COPY (select 'VACUUM ANALYZE ' || relname || ';' from pg_stat_user_tables where schemaname = 'datawarehouse' and left(relname,3) <> 'pxf') TO '/home/gpadmin/vacuum_datawarehouse_tables.sql';
+
+COPY (select 'VACUUM ANALYZE ' || relname || ';' from pg_stat_user_tables where schemaname = 'staging_mdmhits2_klgsh' and left(relname,3) <> 'pxf') TO '/home/gpadmin/vacuum_staging_mdmhits2_klgsh_tables.sql';
+COPY (select 'VACUUM ANALYZE ' || relname || ';' from pg_stat_user_tables where schemaname = 'staging_mdmhits2_kslg' and left(relname,3) <> 'pxf') TO '/home/gpadmin/vacuum_staging_mdmhits2_kslg_tables.sql';
+COPY (select 'VACUUM ANALYZE ' || relname || ';' from pg_stat_user_tables where schemaname = 'staging_medcubeskpj' and left(relname,3) <> 'pxf') TO '/home/gpadmin/vacuum_staging_medcubeskpj_tables.sql';
+COPY (select 'VACUUM ANALYZE ' || relname || ';' from pg_stat_user_tables where schemaname = 'staging_medcubeskpj_selangor' and left(relname,3) <> 'pxf') TO '/home/gpadmin/vacuum_staging_medcubeskpj_selangor_tables.sql';
+
+psql "dbname=kpj options=--search_path=datawarehouse" -a -f /home/gpadmin/vacuum_datawarehouse_tables.sql
+
+psql "dbname=kpj options=--search_path=staging_mdmhits2_klgsh" -a -f /home/gpadmin/vacuum_staging_mdmhits2_klgsh_tables.sql
+psql "dbname=kpj options=--search_path=staging_mdmhits2_kslg" -a -f /home/gpadmin/vacuum_staging_mdmhits2_kslg_tables.sql
+psql "dbname=kpj options=--search_path=staging_medcubeskpj" -a -f /home/gpadmin/vacuum_staging_medcubeskpj_tables.sql
+psql "dbname=kpj options=--search_path=staging_medcubeskpj_selangor" -a -f /home/gpadmin/vacuum_staging_medcubeskpj_selangor_tables.sql
+
+
+
+
+
+
+
+
+
+
+

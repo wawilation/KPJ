@@ -1,0 +1,174 @@
+SELECT name, count(1) FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION ALL SELECT * FROM staging_mdmhits2_kslg.patients) X group by name having count(1) > 1;
+
+
+select count(1) from
+(SELECT name, COUNT(1) 
+FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION ALL SELECT * FROM staging_mdmhits2_kslg.patients) X 
+GROUP BY name HAVING COUNT(1) > 1) A;
+
+
+
+
+
+SELECT name, dateofbirth, gender, updatedate, MAX(updatedate) FROM 
+(SELECT * FROM staging_mdmhits2_klgsh.patients UNION ALL SELECT * FROM staging_mdmhits2_kslg.patients) X WHERE (X.name, X.dateofbirth, X.gender) IN
+
+(SELECT DISTINCT name, dateofbirth, gender FROM
+((SELECT name, dateofbirth, gender, COUNT(1) 
+FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION ALL SELECT * FROM staging_mdmhits2_kslg.patients) X 
+GROUP BY name, dateofbirth, gender HAVING COUNT(1) > 1)) A) LIMIT 10;
+
+
+
+
+-----
+
+
+
+SELECT name, dateofbirth, gender, updatedate, MAX(updatedate) FROM 
+(SELECT * FROM staging_mdmhits2_klgsh.patients UNION ALL SELECT * FROM staging_mdmhits2_kslg.patients) X WHERE (X.name, X.dateofbirth, X.gender) IN
+
+(SELECT DISTINCT name, dateofbirth, gender FROM
+(
+
+
+
+SELECT * FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION ALL SELECT * FROM staging_mdmhits2_kslg.patients) X
+JOIN (SELECT name, dateofbirth, gender, MAX(updatedate) AS lastupdate
+FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION ALL SELECT * FROM staging_mdmhits2_kslg.patients) A 
+GROUP BY name, dateofbirth, gender) B
+ON X.name = B.name AND
+X.dateofbirth = B.dateofbirth AND
+X.updatedate = B.lastupdate LIMIT 10; 
+
+
+
+SELECT COUNT(1) FROM
+(SELECT 
+DISTINCT X.areaid, X.active, X.addresstypeid, X.admitic, X.admitperson, X.aeapproveuserid, X.age, X.bloodgroup, X.childno, X.citizenshipid, X.city, X.companyid, X.companyname, X.confidential, X.corpinfo, X.dateofbirth, X.email, X.financialstatus, firstname, X.firstvisit, X.gender, X.h_pphoneno, X.homephoneno, X.housingarea, X.idtypeid, X.languageid, X.lastname, X.lastvisit, X.maritalstatusid, X.medrecord, X.mrnnumber, X.mrntext, X.mrntype, X.name, X.newic, X.newmrn, noteexist, X.occupationid, X.officetelno, X.oldic, X.oldmrn, X.otherno, X.othernumber, X.personalemail, X.postalcodeid, X.raceid, X.registrationdate, X.relationshipid, X.religionid, X.staffid, X.stateid, X.status, X.street1, street2, X.street3, X.titleid, X.patienttype, X.updatedate, X.updateuserid, X.id, X.picturepath, X.recordstatus, X.description, X.convertedpatientid, X.ismedcare, X.ofcaddresstypeid, X.ofcstreet1, X.ofcstreet2, X.ofcstreet3, ofch_pphoneno, X.ofccity, X.blockno, X.ofcemail, X.ofcpostalcodeid, X.ofcareaid, X.ofcstateid
+FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) X
+JOIN (SELECT name, dateofbirth, gender, MAX(updatedate) AS lastupdate, MAX(mrnnumber) AS lastmrnnumber, MAX(id) AS lastid
+FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) A 
+GROUP BY name, dateofbirth, gender) B
+ON X.name = B.name AND
+X.dateofbirth = B.dateofbirth AND
+X.gender = B.gender AND
+X.updatedate = B.lastupdate AND
+X.mrnnumber = B.lastmrnnumber AND
+X.id = B.lastid) patient;
+--650122
+
+final query:
+SELECT 
+DISTINCT X.areaid, X.active, X.addresstypeid, X.admitic, X.admitperson, X.aeapproveuserid, X.age, X.bloodgroup, X.childno, X.citizenshipid, X.city, X.companyid, X.companyname, X.confidential, X.corpinfo, X.dateofbirth, X.email, X.financialstatus, firstname, X.firstvisit, X.gender, X.h_pphoneno, X.homephoneno, X.housingarea, X.idtypeid, X.languageid, X.lastname, X.lastvisit, X.maritalstatusid, X.medrecord, X.mrnnumber, X.mrntext, X.mrntype, X.name, X.newic, X.newmrn, noteexist, X.occupationid, X.officetelno, X.oldic, X.oldmrn, X.otherno, X.othernumber, X.personalemail, X.postalcodeid, X.raceid, X.registrationdate, X.relationshipid, X.religionid, X.staffid, X.stateid, X.status, X.street1, street2, X.street3, X.titleid, X.patienttype, X.updatedate, X.updateuserid, X.id, X.picturepath, X.recordstatus, X.description, X.convertedpatientid, X.ismedcare, X.ofcaddresstypeid, X.ofcstreet1, X.ofcstreet2, X.ofcstreet3, ofch_pphoneno, X.ofccity, X.blockno, X.ofcemail, X.ofcpostalcodeid, X.ofcareaid, X.ofcstateid
+FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) X
+JOIN (SELECT name, dateofbirth, gender, MAX(updatedate) AS lastupdate, MAX(mrnnumber) AS lastmrnnumber, MAX(id) AS lastid
+FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) A 
+GROUP BY name, dateofbirth, gender) B
+ON X.name = B.name AND
+X.dateofbirth = B.dateofbirth AND
+X.gender = B.gender AND
+X.updatedate = B.lastupdate AND
+X.mrnnumber = B.lastmrnnumber AND
+X.id = B.lastid;
+
+
+
+
+SELECT COUNT(1) FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION ALL SELECT * FROM staging_mdmhits2_kslg.patients) X;
+--674889
+
+/****SELECT COUNT(1) FROM
+(SELECT name, dateofbirth, gender, COUNT(1) 
+FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION ALL SELECT * FROM staging_mdmhits2_kslg.patients) X 
+GROUP BY name, dateofbirth, gender HAVING COUNT(1) > 1) Y;
+--12465****/
+
+
+
+
+
+
+SELECT newic, name, dateofbirth, gender, COUNT(1) FROM
+(SELECT 
+DISTINCT X.areaid, X.active, X.addresstypeid, X.admitic, X.admitperson, X.aeapproveuserid, X.age, X.bloodgroup, X.childno, X.citizenshipid, X.city, X.companyid, X.companyname, X.confidential, X.corpinfo, X.dateofbirth, X.email, X.financialstatus, firstname, X.firstvisit, X.gender, X.h_pphoneno, X.homephoneno, X.housingarea, X.idtypeid, X.languageid, X.lastname, X.lastvisit, X.maritalstatusid, X.medrecord, X.mrnnumber, X.mrntext, X.mrntype, X.name, X.newic, X.newmrn, noteexist, X.occupationid, X.officetelno, X.oldic, X.oldmrn, X.otherno, X.othernumber, X.personalemail, X.postalcodeid, X.raceid, X.registrationdate, X.relationshipid, X.religionid, X.staffid, X.stateid, X.status, X.street1, street2, X.street3, X.titleid, X.patienttype, X.updatedate, X.updateuserid, X.id, X.picturepath, X.recordstatus, X.description, X.convertedpatientid, X.ismedcare, X.ofcaddresstypeid, X.ofcstreet1, X.ofcstreet2, X.ofcstreet3, ofch_pphoneno, X.ofccity, X.blockno, X.ofcemail, X.ofcpostalcodeid, X.ofcareaid, X.ofcstateid
+FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) X
+JOIN (SELECT name, dateofbirth, gender, MAX(updatedate) AS lastupdate, MAX(mrnnumber) AS lastmrnnumber
+FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) A 
+GROUP BY name, dateofbirth, gender) B
+ON X.name = B.name AND
+X.dateofbirth = B.dateofbirth AND
+X.gender = B.gender AND
+X.updatedate = B.lastupdate AND
+X.mrnnumber = B.lastmrnnumber) TEST WHERE name='SIRAJUL ISLAM' GROUP BY newic, name, dateofbirth, gender HAVING COUNT(1) > 1;
+
+
+
+
+SELECT name, gender, dateofbirth, count(1) FROM
+(SELECT 
+DISTINCT X.areaid, X.active, X.addresstypeid, X.admitic, X.admitperson, X.aeapproveuserid, X.age, X.bloodgroup, X.childno, X.citizenshipid, X.city, X.companyid, X.companyname, X.confidential, X.corpinfo, X.dateofbirth, X.email, X.financialstatus, firstname, X.firstvisit, X.gender, X.h_pphoneno, X.homephoneno, X.housingarea, X.idtypeid, X.languageid, X.lastname, X.lastvisit, X.maritalstatusid, X.medrecord, X.mrnnumber, X.mrntext, X.mrntype, X.name, X.newic, X.newmrn, noteexist, X.occupationid, X.officetelno, X.oldic, X.oldmrn, X.otherno, X.othernumber, X.personalemail, X.postalcodeid, X.raceid, X.registrationdate, X.relationshipid, X.religionid, X.staffid, X.stateid, X.status, X.street1, street2, X.street3, X.titleid, X.patienttype, X.updatedate, X.updateuserid, X.id, X.picturepath, X.recordstatus, X.description, X.convertedpatientid, X.ismedcare, X.ofcaddresstypeid, X.ofcstreet1, X.ofcstreet2, X.ofcstreet3, ofch_pphoneno, X.ofccity, X.blockno, X.ofcemail, X.ofcpostalcodeid, X.ofcareaid, X.ofcstateid
+
+FROM 
+(SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) X
+JOIN 
+(
+	SELECT name, dateofbirth, gender, MAX(updatedate) AS lastupdate, MAX(mrnnumber) AS lastmrnnumber, MAX(id) AS lastid
+	FROM (SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients) A 
+	GROUP BY name, dateofbirth, gender) B
+ON X.name = B.name AND
+X.dateofbirth = B.dateofbirth AND
+X.gender = B.gender AND
+X.updatedate = B.lastupdate AND
+X.mrnnumber = B.lastmrnnumber AND
+X.id = B.lastid) test group by name, gender, dateofbirth having count(1) > 1;
+
+
+
+
+
+
+
+
+
+                 name                  | gender |     dateofbirth     | count
+---------------------------------------+--------+---------------------+-------
+ AQEEL ZAHIN BIN AMMAR ZARIR           | Male   | 2019-05-07 00:00:00 |     2
+ MUHAMMAD AKMA WAFIQ BIN MUHAMMAD AMIN | Male   | 2018-07-05 00:00:00 |     2
+ MUHAMMAD ALEEF HAFEEZ BIN ABDUL KARIM | Male   | 2018-08-17 00:00:00 |     2
+ AHMAD KAMAL BIN DAUD                  | Male   | 1973-01-11 00:00:00 |     2
+ MAHIRAN BINTI RADIN                   | Female | 1990-04-28 00:00:00 |     3
+ NURIZZAH BINTI ZAKARIA                | Female | 1984-11-06 00:00:00 |     2
+ WAN HAMIDAH BINTI WAN ABDUL HALIM     | Female | 1990-11-04 00:00:00 |     4
+ SUHAILA BINTI NORDIN                  | Female | 1975-10-07 00:00:00 |     2
+ ZAHRAN NAUFAL BIN MOHAMAD ZAMRI       | Male   | 2019-03-27 00:00:00 |     2
+ KHAIRINA IRDIENA BINTI NOR SHAH MIDI  | Female | 2018-11-11 00:00:00 |     2
+(10 rows)
+
+SELECT newic, name, dateofbirth, gender FROM staging_mdmhits2_klgsh.patients WHERE name = 'AQEEL ZAHIN BIN AMMAR ZARIR'; 
+--0
+
+SELECT id, newic, name, dateofbirth, gender FROM staging_mdmhits2_kslg.patients WHERE name = 'AQEEL ZAHIN BIN AMMAR ZARIR'; 
+
+
+SELECT * FROM staging_mdmhits2_kslg.patients WHERE name = 'AQEEL ZAHIN BIN AMMAR ZARIR'; 
+
+
+
+--------
+
+
+dw_patient_id
+
+ALTER TABLE staging_mdmhits2_klgsh.patients 
+ADD COLUMN dw_patient_id bigint;
+
+
+ALTER TABLE staging_mdmhits2_kslg.patients 
+ADD COLUMN dw_patient_id bigint;
+
+
+
+
+
+

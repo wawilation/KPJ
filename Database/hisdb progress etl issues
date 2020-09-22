@@ -1,0 +1,29 @@
+Pat-Mast:
+oldic
+tel-hp
+Address2
+tel_h
+Name
+citycode
+
+Exception in component tJDBCInput_3
+java.sql.SQLException: [DataDirect][ODBC Progress OpenEdge Wire Protocol driver][OPENEDGE]Column BedNum in table PUB.Bed has value exceeding its max length or precision.
+	at cdata.jdbc.jdbcodbc.OdbcSql.checkSQLError(Unknown Source)
+	at cdata.jdbc.jdbcodbc.OdbcSql.checkSQLError(Unknown Source
+Bed:
+BedNum
+
+BedAlloc:
+BedNum
+Room
+
+BillDet:
+Docref
+BillType
+EpisType
+
+
+
+alter table staging_progress."Bed" drop constraint "Bed_pkey";
+alter table staging_progress."BedAlloc" drop constraint "BedAlloc_pkey";
+alter table staging_progress."BedType" drop constraint "BedType_pkey";

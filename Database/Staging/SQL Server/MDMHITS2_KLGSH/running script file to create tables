@@ -1,0 +1,1 @@
+psql "dbname=kpj options=--search_path=staging_mdmhits2_klgsh" -a -f /home/gpadmin/MDMHITS2_KLGSH_tables_with_DISTRIBUTED_BY

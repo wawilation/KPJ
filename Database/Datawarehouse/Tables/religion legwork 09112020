@@ -1,0 +1,21 @@
+update patient set religion='CHRISTIAN_ROMAN_CATHOLIC' where religion='C';
+update patient set religion='HINDU' where religion='H';
+update patient set religion='OTHER' where religion='O';
+update patient set religion='BUDDHIST' where religion='B';
+update patient set religion='MUSLIM' where religion='I';
+
+
+UPDATE datawarehouse.patient
+SET religion = 
+(CASE religion
+WHEN 'C' THEN 'CHRISTIAN_ROMAN_CATHOLIC'
+WHEN 'H' THEN 'HINDU'
+WHEN 'B' THEN 'BUDDHIST'
+WHEN 'I' THEN 'MUSLIM'
+WHEN 'O' THEN 'OTHER'
+ELSE NULL
+END);
+
+
+
+

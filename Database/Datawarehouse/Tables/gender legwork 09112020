@@ -1,0 +1,18 @@
+update patient set gender='MALE' where gender='1';
+update patient set gender='FEMALE' where gender='female';
+update patient set gender='MALE' where gender='male';
+update patient set gender='UNKNOWN' where gender='Other';
+update patient set gender='FEMALE' where gender='Female';
+update patient set gender='MALE' where gender='Male';
+
+
+UPDATE datawarehouse.patient
+SET gender = 
+(CASE WHEN gender IN ('1','male','Male') THEN 'MALE'
+WHEN gender IN ('female', 'Female') THEN 'FEMALE'
+ELSE 'UNKNOWN'
+END);
+
+
+
+

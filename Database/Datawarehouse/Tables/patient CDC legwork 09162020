@@ -1,0 +1,50 @@
+CDC
+
+kpj=# select name, gender, dateofbirth, mrnnumber, dw_patient_id  from staging_mdmhits2_klgsh.patients where mrnnumber = 1000;
+-[ RECORD 1 ]-+------------------------------
+name          | RAJA AZMAN BIN RAJA HASBULLAH
+gender        | Male
+dateofbirth   | 1952-04-14 00:00:00
+mrnnumber     | 1000
+dw_patient_id | 331944
+
+
+select given_name, gender, birth_dt from datawarehouse.patient where id = 331944;
+-[ RECORD 1 ]-----------------------------
+given_name | RAJA AZMAN BIN RAJA HASBULLAH
+gender     | MALE
+birth_dt   | 1952-04-14 00:00:00
+
+
+select * from datawarehouse.patient_identifier where patient_id = 331944;
+kpj=# select * from datawarehouse.patient_identifier where patient_id = 331944;
+-[ RECORD 1 ]---+-------------
+patient_id      | 331944
+identifier      | 1000
+member_type     |
+id_type         | KLGSH_MRN
+member_pin      |
+member_category |
+voided          | f
+voided_by       |
+voided_date     |
+voided_remarks  |
+-[ RECORD 2 ]---+-------------
+patient_id      | 331944
+identifier      | 520414105793
+member_type     |
+id_type         | NATIONAL_ID
+member_pin      |
+member_category |
+voided          | f
+voided_by       |
+voided_date     |
+voided_remarks  |
+
+
+SELECT X.given_name, X.gender, X.birth_dt FROM datawarehouse.patient X JOIN datawarehouse.patient_identifier Y ON X.id = Y.patient_id
+WHERE id_type = 'KLGSH_MRN' AND CAST(identifier AS int) = 1000;
+          given_name           | gender |      birth_dt
+-------------------------------+--------+---------------------
+ RAJA AZMAN BIN RAJA HASBULLAH | MALE   | 1952-04-14 00:00:00
+(1 row)

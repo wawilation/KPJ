@@ -1,0 +1,78 @@
+            List of schemas
+             Name             |  Owner
+------------------------------+---------
+ datawarehouse                | gpadmin
+ gp_toolkit                   | gpadmin
+ public                       | gpadmin
+ staging_mdmhits2_klgsh       | gpadmin
+ staging_mdmhits2_kslg        | gpadmin
+ staging_medcubeskpj          | gpadmin
+ staging_medcubeskpj_selangor | gpadmin
+ staging_progress             | gpadmin
+(8 rows)
+
+
+drop schema datawarehouse cascade;
+drop schema staging_mdmhits2_klgsh cascade;
+drop schema staging_mdmhits2_kslg cascade;
+drop schema staging_medcubeskpj cascade;
+drop schema staging_medcubeskpj_selangor cascade;
+drop schema staging_progress cascade;
+
+
+create schema datawarehouse;
+create schema staging_mdmhits2_klgsh;
+create schema staging_mdmhits2_kslg;
+create schema staging_medcubeskpj;
+create schema staging_medcubeskpj_selangor;
+create schema staging_progress;
+
+
+psql "dbname=kpj2 options=--search_path=staging_mdmhits2_klgsh" -a -f /home/gpadmin/MDMHITS2_KSLG_tables_with_DISTRIBUTED_BY.sql
+
+psql "dbname=kpj2 options=--search_path=staging_mdmhits2_kslg" -a -f /home/gpadmin/MDMHITS2_KSLG_tables_with_DISTRIBUTED_BY.sql
+
+psql "dbname=kpj2 options=--search_path=staging_medcubeskpj" -a -f /home/gpadmin/MedCubesKPJ_Tables_with_DISTRIBUTED_BY.sql
+
+psql "dbname=kpj2 options=--search_path=staging_medcubeskpj_selangor" -a -f /home/gpadmin/MedCubesKPJ_Selangoor_Tables_with_DISTRIBUTED_BY.sql
+
+
+
+
+
+cat MDMHITS2_KLGSH_PXF_external_tables_ALL_AT_ONCE.sql | sed '/INSERT/d' > MDMHITS2_KLGSH_PXF_create.sql
+
+cat MDMHITS2_KSLG_PXF_external_tables_ALL_AT_ONCE.sql | sed '/INSERT/d' > MDMHITS2_KSLG_PXF_create.sql
+
+cat MedCubesKPJ_Tables_PXF_external_tables_ALL_AT_ONCE.sql | sed '/INSERT/d' > MedCubesKPJ_PXF_create.sql
+
+cat MedCubesKPJ_Selangor_PXF_external_tables_ALL_AT_ONCE.sql | sed '/INSERT/d' > MedCubesKPJ_Selangor_PXF_create.sql
+
+
+
+psql "dbname=kpj2 options=--search_path=staging_mdmhits2_klgsh" -a -f /home/gpadmin/MDMHITS2_KLGSH_PXF_create.sql
+
+psql "dbname=kpj2 options=--search_path=staging_mdmhits2_kslg" -a -f /home/gpadmin/MDMHITS2_KSLG_PXF_create.sql
+
+psql "dbname=kpj2 options=--search_path=staging_medcubeskpj" -a -f /home/gpadmin/MedCubesKPJ_PXF_create.sql
+
+psql "dbname=kpj2 options=--search_path=staging_medcubeskpj_selangor" -a -f /home/gpadmin/MedCubesKPJ_Selangor_PXF_create.sql
+
+
+set search_path=staging_mdmhits2_klgsh;
+set search_path=staging_mdmhits2_kslg;
+set search_path=staging_medcubeskpj;
+set search_path=staging_medcubeskpj_selangor;
+
+psql "dbname=kpj2 options=--search_path=staging_mdmhits2_klgsh" -a -f /home/gpadmin/MDMHITS2_KLGSH_truncate_tables.sql
+
+psql "dbname=kpj2 options=--search_path=staging_mdmhits2_kslg" -a -f /home/gpadmin/MDMHITS2_KSLG_truncate_tables.sql
+
+psql "dbname=kpj2 options=--search_path=staging_medcubeskpj" -a -f /home/gpadmin/MedCubesKPJ_truncate_tables.sql
+
+psql "dbname=kpj2 options=--search_path=staging_medcubeskpj_selangor" -a -f /home/gpadmin/MedCubesKPJ_Selangor_truncate_tables.sql
+
+
+
+
+

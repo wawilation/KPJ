@@ -1,0 +1,15 @@
+update patient set marital_status='MARRIED' where marital_status='M';
+update patient set marital_status='SINGLE' where marital_status='S';
+
+
+UPDATE datawarehouse.patient
+SET marital_status = 
+(CASE marital_status
+WHEN 'M' THEN 'MARRIED'
+WHEN 'S' THEN 'SINGLE'
+ELSE NULL
+END);
+
+
+
+

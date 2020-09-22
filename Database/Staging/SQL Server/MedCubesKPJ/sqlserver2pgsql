@@ -1,0 +1,6 @@
+perl sqlserver2pgsql.pl -f MedCubesKPJ_script.sql -b tables3.sql -a constraints3.sql -u unsure3.sql
+
+
+
+
+

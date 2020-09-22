@@ -1,0 +1,36 @@
+staging_mdmhits2_klgsh - 74243.13 MB - 74.24313 GB
+staging_mdmhits2_kslg  - 223928.88 MB - 223.92888 GB
+staging_medcubeskpj - 817988.18 MB - 817.98818 GB
+staging_medcubeskpj_selangor  -220296.09 MB - 220.29609 GB
+
+= 1336.45628 GB = 1.33645628 TB
+
+
+staging_mdmhits2_klgsh - 74243.13 MB - 74.24313 GB
+staging_mdmhits2_kslg  - 223928.88 MB - 223.92888 GB
+staging_medcubeskpj - 817988.18 MB - 817.98818 GB
+staging_medcubeskpj_selangor  -220296.09 MB - 220.29609 GB
+
+= 1336.45628 GB = 1.33645628 TB
+
+[gpadmin@MDMV101 ~]$ time bash kpj_load_data.sh >> ~/kpj_load_data.log
+real    149m21.530s
+user    0m0.013s
+sys     0m0.014s
+
+
+
+SELECT
+    pg_size_pretty( SUM(pg_database_size(datname))::bigint ) as "size (human readable)",
+    SUM( pg_database_size(datname) )::bigint as "size (raw)"
+FROM pg_database where datname = 'kpj2';
+
+kpj2=# SELECT
+kpj2-#     pg_size_pretty( SUM(pg_database_size(datname))::bigint ) as "size (human readable)",
+kpj2-#     SUM( pg_database_size(datname) )::bigint as "size (raw)"
+kpj2-# FROM pg_database where datname = 'kpj2';
+ size (human readable) |  size (raw)
+-----------------------+--------------
+ 115 GB                | 123538610772
+(1 row)
+

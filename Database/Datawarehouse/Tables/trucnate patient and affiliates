@@ -1,0 +1,5 @@
+truncate table patient cascade;
+truncate table patient_identifier;
+select setval('patient_seq',1);
+
+

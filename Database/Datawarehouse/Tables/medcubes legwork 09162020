@@ -1,0 +1,218 @@
+medcubes patient
+
+
+
+(SELECT * FROM staging_mdmhits2_klgsh.patients UNION SELECT * FROM staging_mdmhits2_kslg.patients)
+
+/**klgsh -> staging_medcubeskpj
+klsg -> staging_medcubes selango**/
+
+
+SELECT count(1)
+FROM staging_mdmhits2_klgsh.patients a JOIN staging_medcubeskpj.patient b
+	ON a.mrnnumber = b.pkid;
+--128284
+
+SELECT count(1)
+FROM staging_mdmhits2_kslg.patients a JOIN staging_medcubeskpj_selangor.patient b
+	ON a.mrnnumber = b.pkid;
+--520165
+
+/****IT WORKED!*****/
+UPDATE staging_medcubeskpj.patient a
+SET dw_patient_id = b.dw_patient_id
+FROM staging_mdmhits2_klgsh.patients b
+WHERE a.pkid = b.mrnnumber;
+
+kpj=# UPDATE staging_medcubeskpj.patient a
+kpj-# SET dw_patient_id = b.dw_patient_id
+kpj-# FROM staging_mdmhits2_klgsh.patients b
+kpj-# WHERE a.pkid = b.mrnnumber;
+UPDATE 128284
+
+UPDATE staging_medcubeskpj_selangor.patient a
+SET dw_patient_id = b.dw_patient_id
+FROM (SELECT DISTINCT dw_patient_id, mrnnumber FROM staging_mdmhits2_kslg.patients) b
+WHERE a.pkid = b.mrnnumber;
+
+kpj=# UPDATE staging_medcubeskpj_selangor.patient a
+kpj-# SET dw_patient_id = b.dw_patient_id
+kpj-# FROM (SELECT DISTINCT dw_patient_id, mrnnumber FROM staging_mdmhits2_kslg.patients) b
+kpj-# WHERE a.pkid = b.mrnnumber;
+UPDATE 520061
+/****IT WORKED!*****/
+
+
+
+
+
+CREATE TEMPORARY TABLE tmp_medcubes_selangor
+	(dw_patient_id bigint, mrnnumber int)
+DISTRIBUTED BY (dw_patient_id, mrnnumber);
+
+INSERT INTO tmp_medcubes_selangor 
+(SELECT DISTINCT dw_patient_id, mrnnumber FROM staging_mdmhits2_kslg.patients WHERE dw_patient_id IS NOT NULL);
+
+UPDATE staging_medcubeskpj_selangor.patient a
+SET dw_patient_id = b.dw_patient_id
+FROM tmp_medcubes_selangor b
+WHERE a.pkid = b.mrnnumber;
+
+
+SELECT a.pkid, a.dw_patient_id, b.dw_patient_id, count(1) 
+FROM staging_medcubeskpj_selangor.patient a JOIN tmp_medcubes_selangor b 
+	ON a.pkid = b.mrnnumber
+GROUP BY a.pkid, a.dw_patient_id, b.dw_patient_id
+HAVING COUNT(1) > 1;
+
+
+ SELECT a.pkid, b.mrnnumber, count(1) 
+FROM staging_medcubeskpj_selangor.patient a JOIN tmp_medcubes_selangor b 
+	ON a.pkid = b.mrnnumber
+GROUP BY a.pkid, b.mrnnumber
+HAVING COUNT(1) > 1;
+  pkid  | mrnnumber | count
+--------+-----------+-------
+ 308882 |    308882 |     2
+ 211888 |    211888 |     2
+ 126541 |    126541 |     2
+  96415 |     96415 |     2
+ 228933 |    228933 |     2
+(5 rows)
+
+--new
+  pkid  | mrnnumber | count
+--------+-----------+-------
+ 211888 |    211888 |     2
+ 228933 |    228933 |     2
+ 308882 |    308882 |     2
+(3 rows)
+
+
+ SELECT a.pkid, b.mrnnumber, count(1) 
+FROM staging_medcubeskpj_selangor.patient a JOIN staging_mdmhits2_kslg.patients b 
+	ON a.pkid = b.mrnnumber
+GROUP BY a.pkid, b.mrnnumber
+HAVING COUNT(1) > 1;
+
+SELECT * FROM staging_medcubeskpj_selangor.patient WHERE pkid = 503761;
+
+
+
+
+select * from staging_medcubeskpj_selangor.patient where pkid = 496171;
+
+select * from tmp_medcubes_selangor where mrnnumber = 496171;
+
+kpj=# select * from tmp_medcubes_selangor where mrnnumber = 496171;
+ dw_patient_id | mrnnumber
+---------------+-----------
+       1071816 |    496171
+        741562 |    496171
+(2 rows)
+
+SELECT name, dateofbirth, gender, mrnnumber, dw_patient_id FROM staging_mdmhits2_kslg.patients WHERE mrnnumber = 503761;
+
+
+
+SELECT name, dateofbirth, gender, mrnnumber, dw_patient_id, updatedate FROM staging_mdmhits2_kslg.patients WHERE mrnnumber = 496171;
+
+SELECT name, dateofbirth, gender, mrnnumber, dw_patient_id FROM staging_mdmhits2_kslg.patients WHERE mrnnumber = 467443;
+kpj=# SELECT name, dateofbirth, gender, mrnnumber, dw_patient_id FROM staging_mdmhits2_kslg.patients WHERE mrnnumber = 467443;
+            name             |     dateofbirth     | gender | mrnnumber | dw_patient_id
+-----------------------------+---------------------+--------+-----------+---------------
+ AMIRA SOFEA BINTI AMIRUDDIN | 2001-08-14 00:00:00 | FEMALE |    467443 |        435691
+ AMIRA SOFEA BINTI AMIRUDDIN | 2001-08-14 00:00:00 | Female |    467443 |        659131
+ AMIRA SOFEA BINTI AMIRUDDIN | 2001-08-14 00:00:00 | Female |    467443 |        659131
+(3 rows)
+
+
+
+UPDATE staging_mdmhits2_kslg.patients SET dw_patient_id = NULL;
+UPDATE staging_mdmhits2_klgsh.patients SET dw_patient_id = NULL;
+
+
+select count(1) from staging_mdmhits2_kslg.patients where dw_patient_id IS NULL;
+select count(1) from staging_mdmhits2_klgsh.patients where dw_patient_id IS NULL;
+kpj=# select count(1) from staging_mdmhits2_kslg.patients where dw_patient_id IS NULL;
+ count
+-------
+  1795
+(1 row)
+
+kpj=# select count(1) from staging_mdmhits2_klgsh.patients where dw_patient_id IS NULL;
+ count
+-------
+     5
+(1 row)
+
+
+
+
+
+
+
+--UPDATE staging_medcubeskpj_selangor.patient a
+--SET dw_patient_id = b.dw_patient_id
+--FROM (select distinct dw_patient_id,mrnumber from staging_mdmhits2_kslg.patients) b
+
+
+kpj=# UPDATE staging_medcubeskpj_selangor.patient a
+kpj-# SET dw_patient_id = b.dw_patient_id
+kpj-# FROM staging_mdmhits2_kslg.patients b
+kpj-# WHERE a.pkid = b.mrnnumber;
+ERROR:  multiple updates to a row by the same query is not allowed  (seg4 10.100.6.171:6004 pid=1096)
+Time: 2461.181 ms
+
+
+select pkid, count(1) from staging_medcubeskpj.patient group by pkid having count(1) > 1;
+--0
+
+select pkid, count(1) from staging_medcubeskpj_selangor.patient group by pkid having count(1) > 1;
+--0
+
+select mrnnumber, count(1) from staging_mdmhits2_klgsh.patients group by mrnnumber having count(1) > 1;
+--0
+
+select mrnnumber, count(1) from staging_mdmhits2_kslg.patients group by mrnnumber having count(1) > 1;
+ mrnnumber | count
+-----------+-------
+    473295 |     2
+    100427 |     2
+    532619 |     2
+    522688 |     2
+    539325 |     2
+    280155 |     2
+    288968 |     2
+    309147 |     2
+    181312 |     2
+    126558 |     2
+     88970 |     2
+    489135 |     2
+    288346 |     2
+    492278 |     2
+    289509 |     2
+     96415 |     2
+    373845 |     2
+    126283 |     2
+    273382 |     2
+    143612 |     4
+    338196 |     2
+    417453 |     2
+    162989 |     2
+    408726 |     3
+etc....
+
+
+select distinct mrnnumber, dw_patient_id from
+(select mrnnumber, dw_patient_id, count(1) from staging_mdmhits2_kslg.patients group by mrnnumber, dw_patient_id having count(1) > 1) x
+group by mrnnumber, dw_patient_id having count(1) > 1;
+
+SELECT dw_patient_id, mrnnumber FROM
+(SELECT DISTINCT dw_patient_id, mrnnumber FROM staging_mdmhits2_kslg.patients) x
+GROUP BY dw_patient_id, mrnnumber HAVING COUNT(1) > 1;
+
+
+
+
+

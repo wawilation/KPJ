@@ -1,0 +1,38 @@
+SELECT name, mrnnumber, gender FROM staging_mdmhits2_klgsh.pxf_patients EXCEPT SELECT name, mrnnumber,  gender FROM staging_mdmhits2_klgsh.patients;
+
+UPDATE datawarehouse.patient
+SET gender = 
+(CASE WHEN gender IN ('1','male','Male', 'MALE') THEN 'MALE'
+WHEN gender IN ('female', 'Female', 'FEMALE') THEN 'FEMALE'
+ELSE 'UNKNOWN'
+END);
+
+
+SELECT a.gender, b.gender
+FROM staging_mdmhits2_klgsh.patients a JOIN datawarehouse.patient b
+	ON a.dw_patient_id = b.id
+WHERE b.gender = 'UNKNOWN';
+
+SELECT a.gender, b.gender
+FROM staging_mdmhits2_kslg.patients a JOIN datawarehouse.patient b
+	ON a.dw_patient_id = b.id
+WHERE b.gender = 'UNKNOWN';
+
+
+
+
+UPDATE datawarehouse.patient a
+	SET gender = (CASE WHEN b.gender IN ('1','male','Male', 'MALE') THEN 'MALE'
+			WHEN b.gender IN ('female', 'Female', 'FEMALE') THEN 'FEMALE'
+			ELSE 'UNKNOWN'
+			END)
+FROM staging_mdmhits2_klgsh.patients b
+WHERE a.id = b.dw_patient_id;
+
+UPDATE datawarehouse.patient a
+	SET gender = (CASE WHEN b.gender IN ('1','male','Male', 'MALE') THEN 'MALE'
+			WHEN b.gender IN ('female', 'Female', 'FEMALE') THEN 'FEMALE'
+			ELSE 'UNKNOWN'
+			END)
+FROM staging_mdmhits2_kslg.patients b
+WHERE a.id = b.dw_patient_id;
